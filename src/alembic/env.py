@@ -23,6 +23,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from main.db.base_class import Base
+from main.models.plant import PlantaCatalogo
 from main.models.user import Admin, Super_usuario, Usuario
 
 target_metadata = Base.metadata

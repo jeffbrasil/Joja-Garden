@@ -15,5 +15,5 @@ class UsuarioResponse(BaseModel):
     email: EmailStr
     tipo_usuario: str = "usuario"
 
-    class config:
+    class Config:
         from_attributes = True
