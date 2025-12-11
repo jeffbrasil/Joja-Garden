@@ -32,6 +32,7 @@ def client():
     def override_get_db():
         try:
             db = SessionTest()
+            yield db
         finally:
             db.close()
 

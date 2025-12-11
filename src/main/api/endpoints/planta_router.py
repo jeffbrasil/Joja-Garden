@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from main.api.deps import get_current_active_admin, get_db
 from main.models.plant import PlantaCatalogo, PlantaUsuario
-from main.models.user import Usuario
+from main.models.user import Usuario, Admin
 from main.schemas.planta_catalogo_schema import (
     PlantaCatalogoCreate,
     PlantaCatalogoResponse,
@@ -25,19 +25,19 @@ def adicionar_planta_ao_usuario(
     session=Depends(get_db),
     current_admin=Depends(get_current_active_admin),
 ):
-    if not session.query(Usuario).filter(Usuario.id == usuario_id).first():
+    if not session.query(Admin).filter(Admin.id == usuario_id).first():
         raise HTTPException(status_code=400, detail="Usuário não existe")
 
     if (
         not session.query(PlantaCatalogo)
-        .filter(PlantaCatalogo.id == planta_in.id_catalogo)
+        .filter(PlantaCatalogo.id == planta_in.id)
         .first()
     ):
         raise HTTPException(status_code=400, detail="Planta não cadastrada no sistema")
 
     nova_planta_usuario = PlantaUsuario(
         usuaio_id=usuario_id,
-        catalogo_id=planta_in.id_catalogo,
+        catalogo_id=planta_in.id,
         apelido=planta_in.apelido,
     )
     session.add(nova_planta_usuario)

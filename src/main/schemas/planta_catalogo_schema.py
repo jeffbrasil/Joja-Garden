@@ -30,7 +30,7 @@ class PlantaCatalogoResponse(PlantaCatalogoBase):
 
 
 class PlantaUsuarioCreate(BaseModel):
-    id_planta_catalogo: int
+    id: int
     apelido: Optional[str] = None
     data_plantio: Optional[date] = None
 
