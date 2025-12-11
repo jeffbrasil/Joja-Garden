@@ -7,8 +7,11 @@ from sqlalchemy import (
     String,
     create_engine,
 )
+
 from main.db.base_class import Base
+
 # Cria a conexão com o banco
+
 
 class Super_usuario(Base):
     __tablename__ = "super_usuario"
@@ -30,7 +33,7 @@ class Admin(Super_usuario):
     __mapper_args__ = {"polymorphic_identity": "admin"}
 
 
-class Usuario(Base):
+class Usuario(Super_usuario):
 
     __tablename__ = "usuario"
     id = Column("id", Integer, ForeignKey("super_usuario.id"), primary_key=True)
