@@ -8,6 +8,7 @@ from main.schemas.planta_catalogo_schema import (
     PlantaCatalogoResponse,
 )
 
+from typing import List
 router = APIRouter()
 
 
@@ -23,7 +24,7 @@ def adicionar_planta_ao_catalogo(
 ):
     # verificar se a planta já não está cadastrada
     if (
-        not session.query(PlantaCatalogo)
+         session.query(PlantaCatalogo)
         .filter(PlantaCatalogo.nome_cientifico == planta_in.nome_cientifico)
         .first()
     ):
@@ -51,12 +52,12 @@ def adicionar_planta_ao_catalogo(
 
 @router.get(
     "/catalogo",
-    response_model=PlantaCatalogoResponse,
+    response_model= List[PlantaCatalogoResponse],
     status_code=status.HTTP_201_CREATED,
 )
 def listar_catalogo(
     skip: int = 0,
-    limit: int = 25,
+    limit:int = 25, 
     session=Depends(get_db),
     current_user=Depends(get_current_user),
 ):
