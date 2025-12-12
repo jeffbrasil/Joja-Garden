@@ -1,26 +1,22 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+    --font-sv: "stardew-valley", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@font-face {
+    font-family: "stardew-valley";
+    src: url("/fonts/stardew-valley.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@font-face {
+    font-family: "stardew-valley";
+    src: url("/fonts/svbold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
 }
