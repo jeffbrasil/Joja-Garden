@@ -25,7 +25,7 @@ def adicionar_planta_ao_usuario(
     session=Depends(get_db),
     current_admin=Depends(get_current_active_admin),
 ):
-    if not session.query(Admin).filter(Admin.id == usuario_id).first():
+    if not session.query(Usuario).filter(Usuario.id == usuario_id).first():
         raise HTTPException(status_code=400, detail="Usuário não existe")
 
     if (
@@ -36,8 +36,8 @@ def adicionar_planta_ao_usuario(
         raise HTTPException(status_code=400, detail="Planta não cadastrada no sistema")
 
     nova_planta_usuario = PlantaUsuario(
-        usuaio_id=usuario_id,
-        catalogo_id=planta_in.id,
+        usuario_id=usuario_id,
+        planta=planta_in.id,
         apelido=planta_in.apelido,
     )
     session.add(nova_planta_usuario)
