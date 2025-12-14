@@ -16,7 +16,7 @@ from main.db.base_class import Base
 class Jardim(Base):
     __tablename__ = "jardim"
 
-    id = Column("id", Integer,primary_key=True, autoincremente = True)
+    id = Column("id", Integer,primary_key=True, autoincrement = True)
     nome = Column("nome", String, default = "")
     usuario_id = Column(Integer, ForeignKey("usuario.id"))
     dono = relationship("Usuario", back_populates="jardim")

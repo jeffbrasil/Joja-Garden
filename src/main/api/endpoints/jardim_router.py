@@ -6,7 +6,7 @@ from main.models.plant import PlantaCatalogo, PlantaUsuario
 from main.models.garden import Jardim
 from main.models.user import Usuario
 
-from main.schemas.jardim_schema import (JardimCreate, JardimResponse)
+from main.schemas.jardim_schema import JardimCreate, JardimResponse
 router = APIRouter()
 
 @router.post(
@@ -37,13 +37,27 @@ def criar_jardim(
     "/{jardim_id}/adicionar-planta/{planta_id}"
 )
 def adicionar_planta_jardim(
-    planta_in : int,
+    planta_id : int,
     jardim_id : int,
     session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     #verifica se a planta já não está no jardim
-    if not session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_in).first():
+    if not session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).first():
         raise HTTPException(status_code=400, detail = "A planta atual já pertence ao jardim")
     #verifica se o jardim é do usuario
-    jardim = session.query(Usuario).filter(Usuario.jardins)
+    jardim = session.query(Usuario).filter(Usuario.jardins == jardim_id).first()
+    if not jardim:
+        raise HTTPException(status_code= 404, detail= "Jardim não encontrado")
+    
+    #verifica se o usuário possui a planta
+    planta = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id,PlantaUsuario.usuario_id == current_user.id).first()
+
+    if not planta:
+        raise HTTPException( status_code = 404, detail = "Planta não encontrada no cadastro do usuário")
+    
+    planta.jardim_id = jardim_id
+    
+    session.commit()
+
+    return {"message" : f"Planta {planta.apelido} foi adicionada ao jardim {jardim.nome}"}
