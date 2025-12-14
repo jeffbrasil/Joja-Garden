@@ -24,17 +24,28 @@ engine = create_engine(
 
 SessionTest = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
 @pytest.fixture(scope="function")
-def client():
+def db_session():
+    """Cria as tabelas, entrega uma sessão para o teste e 
+    limpa tudo quando finalizar"""
+
     Base.metadata.create_all(bind=engine)
+
+    try:
+        session = SessionTest()
+        yield session
+    finally:
+        session.close()
+    Base.metadata.drop_all(bind=engine)
+@pytest.fixture(scope="function")
+def client(db_session):
+    
 
     def override_get_db():
         try:
-            db = SessionTest()
-            yield db
+            yield db_session
         finally:
-            db.close()
+            pass
 
     app.dependency_overrides[get_db] = override_get_db
     # Aqui o yield pausa a execução enquanto o arquivo de testes estiver sendo usado
@@ -42,4 +53,4 @@ def client():
         yield c
     # Limpeza de tudo do banco temporário
     app.dependency_overrides.clear()
-    Base.metadata.drop_all(bind=engine)
+
