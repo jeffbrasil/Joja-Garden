@@ -25,6 +25,7 @@ if config.config_file_name is not None:
 from main.db.base_class import Base
 from main.models.plant import PlantaCatalogo
 from main.models.user import Admin, Super_usuario, Usuario
+from src.main.models.garden import Jardim
 
 target_metadata = Base.metadata
 
