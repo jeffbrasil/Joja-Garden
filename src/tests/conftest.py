@@ -54,3 +54,39 @@ def client(db_session):
     # Limpeza de tudo do banco temporário
     app.dependency_overrides.clear()
 
+@pytest.fixture
+def admin_payload():
+    return {
+        "nome": "Admin Teste",
+        "cpf": "08601441009",
+        "senha": "Gri90p2M@8(Y",
+    }
+@pytest.fixture
+def usuario_payload():
+    return {
+        "nome": "Cliente Feliz",
+        "cpf": "11122233344",
+        "email": "cliente@email.com",
+        "senha": "senha_cliente",
+        "endereco" : "rua 1" 
+}
+@pytest.fixture
+def get_admin_header(client:TestClient, admin_payload):
+
+    client.post("admin/criar_conta", json = admin_payload)
+
+    login = {"username" : admin_payload["cpf"], "password" : admin_payload["senha"]}
+    response = client.post("/auth/token", data = login)
+    assert response.status_code == 200, f"Login falhou: {response.json()}"
+    token = response.json()["access_token"]
+    return {"Authorization" : f"Bearer {token}"}
+
+@pytest.fixture
+def get_usuario_header(client:TestClient, usuario_payload, get_admin_header):
+
+    client.post("usuario", headers =get_admin_header, json = usuario_payload)
+    login = {"username" : usuario_payload["cpf"], "password" : usuario_payload["senha"]}
+    response = client.post("/auth/token", data = login)
+    token = response.json()["access_token"]
+    
+    return  {"Authorization" : f"Bearer {token}"}

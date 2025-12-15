@@ -19,6 +19,7 @@ class Jardim(Base):
     id = Column("id", Integer,primary_key=True, autoincrement = True)
     nome = Column("nome", String, default = "")
     usuario_id = Column(Integer, ForeignKey("usuario.id"))
-    dono = relationship("Usuario", back_populates="jardim")
+
+    dono = relationship("Usuario", back_populates="jardins")
 
     plantas = relationship("PlantaUsuario", back_populates="jardim")
