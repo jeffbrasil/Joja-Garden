@@ -126,4 +126,5 @@ class TestVisualizarCatalogo:
 
 class TestAdicionarPlantaAoUsuario:
 
-    def test_admin_adiciona_planta_ao_usuario(self, client:TestClient, get_admin_header, get_usuario_com_jardim)
+    def test_admin_adiciona_planta_ao_usuario(self, client:TestClient, get_admin_header, get_usuario_com_jardim):
+        pass
