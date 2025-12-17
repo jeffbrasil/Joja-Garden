@@ -15,14 +15,14 @@ router = APIRouter()
 )
 def create_admin(admin_in: AdminCreate, session=Depends(get_db)):
 
-    if not valida_cpf(usuario_in.cpf):
+    if not valida_cpf(admin_in.cpf):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="CPF inválido"
         )
 
     
-    if not valida_senha(usuario_in.senha):
+    if not valida_senha(admin_in.senha):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Senha inválida"
