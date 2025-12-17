@@ -9,7 +9,7 @@ from sqlalchemy import (
 )
 
 from main.db.base_class import Base
-
+from sqlalchemy.orm import relationship
 # Cria a conexão com o banco
 
 
@@ -40,6 +40,8 @@ class Usuario(Super_usuario):
     email = Column("email", String, nullable=False)
 
     __mapper_args__ = {"polymorphic_identity": "usuario"}
+
+    jardins = relationship("Jardim", back_populates="dono")
 
 
 # admin

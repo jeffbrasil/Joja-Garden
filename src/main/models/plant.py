@@ -47,3 +47,10 @@ class PlantaUsuario(Base):
     catalogo = relationship("PlantaCatalogo")
     # Aqui a mesma coisa, ele traz o usuario quando tivermos minhaPlanta.dono
     dono = relationship("Usuario", backref="minhas_plantas")
+
+    jardim_id = Column("jardim", Integer, ForeignKey("jardim.id"), nullable=True)
+    jardim = relationship("jardim", back_populates="planta_usuario")
+
+    historico = relationship("Acao", back_populates="planta", cascade = "all, delete-orphan")
+
+    galeria = relationship("Imagem", back_populates="planta", cascade = "all, delete-orphan")
