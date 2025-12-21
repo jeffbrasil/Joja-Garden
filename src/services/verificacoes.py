@@ -1,3 +1,4 @@
+
 def valida_cpf(cpf):
     retorno = False
     # Remove caracteres não numéricos (como '.', '-')
@@ -29,8 +30,6 @@ def valida_cpf(cpf):
         return retorno
     else:
         return retorno
-
-
 
 def valida_senha(senha):
     retorno = False
