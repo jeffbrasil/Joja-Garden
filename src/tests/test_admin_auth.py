@@ -151,3 +151,74 @@ class TestCriarAdmin:
              response = client.post("usuario", json = usuario_valido, headers = header)
 
              assert(response.status_code == status.HTTP_400_BAD_REQUEST)
+
+    class TestLoginAdmin:
+
+        """
+            Testes para verificar o login do administrador
+        """
+
+        def test_login_admin_sucesso(self, client:TestClient):
+                
+            client.post("admin/criar_conta", json= admin_valido)
+
+            login = {
+               
+                  "username": "08601441009",
+                 "password": "Gri90p2M@8(Y",
+            }
+
+            response = client.post("/auth/token", data = login)
+
+            assert(response.status_code == status.HTTP_200_OK)
+            assert("access_token" in response.json())
+            assert(response.json()["token_type"] == "bearer")
+
+        def test_login_admin_senha_invalida(self, client:TestClient):
+
+            client.post("admin/criar_conta" , json = admin_valido)
+
+            login = {
+                "username": "08601441009",
+                "password" : "12345678"
+            }
+
+            response = client.post("auth/token", data = login)
+
+            assert (response.status_code == status.HTTP_401_UNAUTHORIZED)
+            assert ("incorreto" in response.json()["detail"])
+
+    class TestLoginUsuario:
+        
+
+        def test_login_usuario_sucesso(self, client:TestClient):
+            header = get_admin_header(client)
+            client.post("usuario", headers = header, json = usuario_valido)
+
+            login = {
+                "username": "11122233344",
+                "password": "senha_cliente",
+            }
+
+            response = client.post("auth/token", data = login)
+
+            assert(response.status_code == status.HTTP_200_OK)
+            assert("access_token" in response.json())
+            assert(response.json()["token_type"] == "bearer")
+        
+        def test_login_usuario_fracasso(self, client:TestClient):
+
+            header = get_admin_header(client)
+            client.post("usuario", headers = header, json = usuario_valido)
+
+            login = {
+                "username": "11122233344",
+                "password": "45678978965",
+            }
+
+            response = client.post("auth/token", data = login)
+
+            assert (response.status_code == status.HTTP_401_UNAUTHORIZED)
+            assert ("incorreto" in response.json()["detail"])
+
+            

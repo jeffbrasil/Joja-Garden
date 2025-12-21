@@ -12,7 +12,7 @@ from typing import List
 router = APIRouter()
 
 @router.post(
-    "/{planta.id}/registrar",
+    "/{planta_id}/registrar",
     response_model= AcaoResponse,
     status_code= status.HTTP_201_CREATED
 )
@@ -44,7 +44,7 @@ def realizar_acao(
 
 
 @router.get(
-    "/{planta.id}/acoes",
+    "/{planta_id}/acoes",
     response_model= List[AcaoResponse]
 )
 def listar_acoes(

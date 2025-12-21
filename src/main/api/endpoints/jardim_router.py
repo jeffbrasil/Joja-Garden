@@ -20,7 +20,7 @@ def criar_jardim(
     session = Depends(get_db),
     current_usuario = Depends(get_current_user)
 ):
-    if not session.query(Jardim).filter(Jardim.nome == jardim_in.nome).first():
+    if session.query(Jardim).filter(Jardim.nome == jardim_in.nome).first():
         raise HTTPException(status_code= 400, detail = "Já existe um jardim com esse nome")
 
     novo_jardim = Jardim(
@@ -44,7 +44,7 @@ def adicionar_planta_jardim(
     current_user = Depends(get_current_user)
 ):
     #verifica se a planta já não está no jardim
-    if not session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).first():
+    if  session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).first():
         raise HTTPException(status_code=400, detail = "A planta atual já pertence ao jardim")
     #verifica se o jardim é do usuario
     jardim = session.query(Usuario).filter(Usuario.jardins == jardim_id).first()

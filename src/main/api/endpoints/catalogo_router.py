@@ -51,9 +51,9 @@ def adicionar_planta_ao_catalogo(
 
 
 @router.get(
-    "/catalogo",
+    "/visualizar",
     response_model= List[PlantaCatalogoResponse],
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
 def listar_catalogo(
     skip: int = 0,
