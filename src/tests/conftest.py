@@ -14,7 +14,7 @@ from main.main import app
 
 
 
-DATABASE_URL_TEST = "sqlite:///:memory"
+DATABASE_URL_TEST = "sqlite:///:memory:"
 engine = create_engine(
     DATABASE_URL_TEST,
     connect_args={"check_same_thread" :False},

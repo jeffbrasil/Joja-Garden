@@ -10,9 +10,9 @@ admin_valido = {
 }
 usuario_valido = {
     "nome": "Cliente Feliz",
-    "cpf": "11122233344",
+    "cpf": "37025142018",
     "email": "cliente@email.com",
-    "senha": "senha_cliente",
+    "senha": "Senha_cliente1",
     "endereco" : "rua 1"
      
 }
@@ -51,7 +51,7 @@ class TestCriarAdmin:
 
         admin2 = {
             "nome" : "João",
-            'cpf' : "12345678910",
+            'cpf' : "89854749010",
             "senha" : "A144oEi%w[",
         }
 
@@ -196,8 +196,8 @@ class TestCriarAdmin:
             client.post("usuario", headers = header, json = usuario_valido)
 
             login = {
-                "username": "11122233344",
-                "password": "senha_cliente",
+                "username": "37025142018",
+                "password": "Senha_cliente1",
             }
 
             response = client.post("auth/token", data = login)
