@@ -20,7 +20,6 @@ def planta_catalogo_valida():
         
     }
 
-
 class TestCadastroPlantaCatalogo:
     """
         Suíte de testes responsável pela criação do catálogo de plantas
@@ -73,19 +72,18 @@ class TestCadastroPlantaCatalogo:
         assert(response.status_code == status.HTTP_400_BAD_REQUEST)
     
     def test_admin_adiciona_planta_sem_nome_cientifico(self, client:TestClient, get_admin_header, planta_catalogo_valida):
-        """
-            ATENÇÃO: verificar se este teste é válido, da forma como nosso código está estruturado, 
-            ele permite cadastrar uma planta sem necessariamente precisar do nome cientifico. Verificar
-            no product backlog
-        """
+        "Não pode adicionar planta sem nome cientifico"
         
         planta_catalogo_valida["nome_cientifico"] = ""
 
-        header = get_admin_header
-        
-        response = client.post("/catalogo/adicionar_planta_catalogo", headers = header, json = planta_catalogo_valida)
+        response = client.post(
+            "/catalogo/adicionar_planta_catalogo",
+            headers=get_admin_header,
+            json=planta_catalogo_valida
+        )
 
-        assert (response.status_code == status.HTTP_400_BAD_REQUEST)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert "nome científico" in response.json()["detail"][0]["msg"].lower()
 
     def test_usuario_comum_nao_consegue_adicionar_planta_catalogo(self, client:TestClient, planta_catalogo_valida, get_admin_header, get_usuario_header):
 
@@ -113,7 +111,7 @@ class TestVisualizarCatalogo:
         dados = response.json()
 
         assert(response.status_code == status.HTTP_200_OK)
-        assert isinstance(data, list)   
+        assert isinstance(dados, list)   
     
     def test_admin_tenta_visualizar_catalogo_plantas(self, client:TestClient, get_admin_header, planta_catalogo_valida):
        
@@ -127,4 +125,6 @@ class TestVisualizarCatalogo:
 class TestAdicionarPlantaAoUsuario:
 
     def test_admin_adiciona_planta_ao_usuario(self, client:TestClient, get_admin_header, get_usuario_com_jardim):
-        pass
+            header_user = get_usuario_com_jardim["header_user"]
+            jardim = get_usuario_com_jardim["jardim"]
+            pass

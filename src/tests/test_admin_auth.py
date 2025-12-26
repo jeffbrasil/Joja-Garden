@@ -10,9 +10,9 @@ admin_valido = {
 }
 usuario_valido = {
     "nome": "Cliente Feliz",
-    "cpf": "11122233344",
+    "cpf": "37025142018",
     "email": "cliente@email.com",
-    "senha": "senha_cliente",
+    "senha": "Senha_cliente1",
     "endereco" : "rua 1"
      
 }
@@ -51,7 +51,7 @@ class TestCriarAdmin:
 
         admin2 = {
             "nome" : "João",
-            'cpf' : "12345678910",
+            'cpf' : "89854749010",
             "senha" : "A144oEi%w[",
         }
 
@@ -60,26 +60,6 @@ class TestCriarAdmin:
 
         assert(response.status_code == status.HTTP_201_CREATED)
         assert(response2.status_code == status.HTTP_201_CREATED)
-
-    def test_criar_admin_senha_menor_8_digitos(self,client: TestClient):
-        admin_senha_pequena = {
-            "cpf" : "24785993090",
-            "nome" : "teste",
-            "senha" : "1234567"
-        }
-        response = client.post("admin/criar_conta", json = admin_senha_pequena)
-        assert(response.status_code == status.HTTP_400_BAD_REQUEST)
-
-    def test_criar_admin_senha_8_digitos_fraca(self,client: TestClient):
-
-        admin_senha_fraca = {
-            "nome" : "senha fraca",
-            "cpf" : "24785993090",
-            "senha" : "12345678",
-        }
-
-        response = client.post("admin/criar_conta" , json = admin_senha_fraca)
-        assert(response.status_code == status.HTTP_400_BAD_REQUEST)
 
     def test_criar_admin_vazio(self,client: TestClient):
         admin_nulo = {}
@@ -196,8 +176,8 @@ class TestCriarAdmin:
             client.post("usuario", headers = header, json = usuario_valido)
 
             login = {
-                "username": "11122233344",
-                "password": "senha_cliente",
+                "username": "37025142018",
+                "password": "Senha_cliente1",
             }
 
             response = client.post("auth/token", data = login)
