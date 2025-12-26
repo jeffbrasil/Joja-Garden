@@ -5,6 +5,7 @@ from main.api.deps import get_current_active_admin, get_db  # <--- Importante
 from main.core.security import get_password_hash
 from main.models.user import Super_usuario, Usuario
 from main.schemas.usuario_schema import UsuarioCreate, UsuarioResponse
+from services.verificacoes import valida_cpf, valida_senha
 
 router = APIRouter()
 
@@ -15,6 +16,19 @@ def create_usuario(
     session=Depends(get_db),
     current_admin=Depends(get_current_active_admin),
 ):
+    
+    if not valida_cpf(usuario_in.cpf):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CPF inválido"
+        )
+
+    
+    if not valida_senha(usuario_in.senha):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha inválida"
+        )
 
     # verifica se o CPF existe
     if session.query(Super_usuario).filter(Super_usuario.cpf == usuario_in.cpf).first():

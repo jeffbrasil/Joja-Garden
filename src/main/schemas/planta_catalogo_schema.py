@@ -1,12 +1,12 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class PlantaCatalogoBase(BaseModel):
     nome: str
-    nome_cientifico: Optional[str] = None
+    nome_cientifico: str 
     categoria: Optional[str] = None
     familia: Optional[str] = None
     descricao: Optional[str] = None
@@ -15,6 +15,14 @@ class PlantaCatalogoBase(BaseModel):
     periodicidade_rega: int = 2
     periodicidade_poda: int = 30
     periodicidade_adubo: int = 15
+
+    @field_validator("nome_cientifico")
+    @classmethod
+    def validar_nome_cientifico(cls, v: str):
+        if not v or not v.strip():
+            raise ValueError("Nome científico é obrigatório")
+        return v
+    
 
 
 # O admin utiliza este para adicionar uma planta no catálogo
