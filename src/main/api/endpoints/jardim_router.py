@@ -16,7 +16,7 @@ router = APIRouter()
     status_code= status.HTTP_201_CREATED,
 )
 def criar_jardim(
-    jardim_in = JardimCreate,
+    jardim_in : JardimCreate,
     session = Depends(get_db),
     current_usuario = Depends(get_current_user)
 ):
@@ -25,7 +25,7 @@ def criar_jardim(
 
     novo_jardim = Jardim(
         nome = jardim_in.nome,
-        usuario_id = current_usuario
+        usuario_id = current_usuario.id
     )
 
     session.add(novo_jardim)
@@ -44,10 +44,10 @@ def adicionar_planta_jardim(
     current_user = Depends(get_current_user)
 ):
     #verifica se a planta já não está no jardim
-    if  session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).first():
+    if  session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id, PlantaUsuario.jardim_id == jardim_id).first():
         raise HTTPException(status_code=400, detail = "A planta atual já pertence ao jardim")
     #verifica se o jardim é do usuario
-    jardim = session.query(Usuario).filter(Usuario.jardins == jardim_id).first()
+    jardim = session.query(Jardim).filter(Jardim.id == jardim_id, Jardim.usuario_id == current_user.id).first()
     if not jardim:
         raise HTTPException(status_code= 404, detail= "Jardim não encontrado")
     

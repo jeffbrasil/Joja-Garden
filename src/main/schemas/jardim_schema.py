@@ -13,4 +13,4 @@ class JardimResponse(JardimBase):
     id: int
     plantas : List[PlantaUsuarioResponse] = []
 
-    model_config=ConfigDict(from_attibutes=True)
+    model_config=ConfigDict(from_attributes=True)
