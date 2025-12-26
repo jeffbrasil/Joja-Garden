@@ -14,9 +14,9 @@ router = APIRouter()
 @router.post("/{planta.id}/adicionar", status_code= status.HTTP_201_CREATED, response_model= ImagemResponse)
 def adicionar_imagem_planta(
     planta_id :int,
+     imagem_in : ImagemCreate,
     current_user = Depends(get_current_user),
-    session = Depends(get_db),
-    imagem_in = ImagemCreate
+    session = Depends(get_db)   
     ):
 
 
@@ -53,6 +53,6 @@ def ver_galeria(
     if not session.query(PlantaUsuario).filter(PlantaUsuario.usuario_id == current_user.id).first():
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail = "Usuario não encontrado")
     
-    galeria = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).frist().galeria
+    galeria = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).first().galeria
 
     return galeria

@@ -6,9 +6,10 @@ from main.models.acao_tipo import TipoAcao
 from datetime import datetime
 
 class ImagemBase(BaseModel):
+    url : str
     descricao : Optional[str] = None
     titulo : Optional[str] = None
-    url : str
+    data_hora : Optional[datetime] = None
     
 class ImagemCreate(ImagemBase):
     pass

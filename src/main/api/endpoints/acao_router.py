@@ -18,7 +18,7 @@ router = APIRouter()
 )
 def realizar_acao(
     planta_id: int,
-    acao_in = AcaoCreate,
+    acao_in : AcaoCreate,
     session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
