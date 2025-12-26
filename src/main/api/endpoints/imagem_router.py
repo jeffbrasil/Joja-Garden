@@ -11,7 +11,7 @@ from typing import List
 
 router = APIRouter()
 
-@router.post("/{planta.id}/adicionar", status_code= status.HTTP_201_CREATED, response_model= ImagemResponse)
+@router.post("/{planta_id}/adicionar", status_code= status.HTTP_201_CREATED, response_model= ImagemResponse)
 def adicionar_imagem_planta(
     planta_id :int,
      imagem_in : ImagemCreate,

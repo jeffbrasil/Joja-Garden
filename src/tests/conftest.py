@@ -66,11 +66,27 @@ def admin_payload():
 def usuario_payload():
     return {
         "nome": "Cliente Feliz",
-        "cpf": "27894266000",
+        "cpf": "13765913081",
         "email": "cliente@email.com",
         "senha": "Senha_cliente1",
         "endereco" : "rua 1" 
 }
+@pytest.fixture
+def planta_catalogo_payload():
+    return {
+        "nome": "Samambaia Americana",
+        "nome_cientifico": "Nephrolepis exaltata",
+        "categoria" : "Polypodiales",
+        "familia" : "Nephrolepidaceae",
+        "descricao": "Gosta de sombra e umidade.",
+        "instrucoes_cuidado": "Sombra parcial",
+        "img_url" : "finge que tem um link aqui",
+        "periodicidade_rega": "2",
+        "periodicidade_poda": "30",
+        "periodicidade_adubo": "15"
+        
+    }
+
 @pytest.fixture
 def get_admin_header(client:TestClient, admin_payload):
 
