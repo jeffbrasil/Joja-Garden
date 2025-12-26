@@ -9,7 +9,7 @@ export default function CadastroForm() {
   return (
     <div className="font-poppins text-primary w-screen h-screen flex justify-center items-center bg-quinquenary">
       <div className="w-2/8 h-3/6 rounded-lg text-[18px] flex flex-col gap-5 px-6 py-8 bg-quaternary shadow-md shadow-tertiary">
-        <div className="text-primary w-full text-center font-semibold text-2xl my-2">
+        <div className="text-primary text-center font-semibold text-2xl my-2">
           Cadastrar um Administrador
         </div>
 

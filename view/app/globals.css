@@ -4,8 +4,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sv: "stardew-valley", sans-serif;
-    --font-torus: "torus", sans-serif;
+    --color-primary: #253528;
+    --color-secondary: #49654e;
+    --color-tertiary: #8ba889;
+    --color-quaternary: #ffffff;
+    --color-quinquenary: #e4e6d9;
+    --font-poppins: "Poppins", sans-serif;
 }
 
 /*definições dos elementos de página*/
