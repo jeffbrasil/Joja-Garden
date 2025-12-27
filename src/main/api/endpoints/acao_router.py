@@ -16,6 +16,7 @@ router = APIRouter()
     response_model= AcaoResponse,
     status_code= status.HTTP_201_CREATED
 )
+
 def realizar_acao(
     planta_id: int,
     acao_in = AcaoCreate,

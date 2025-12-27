@@ -1,5 +1,7 @@
 #CA01
+import pytest
 @pytest.mark.parametrize("acao", ["rega", "poda", "adubo"])
+
 def test_registrar_acao_valida(
     client, get_usuario_header, planta_usuario, acao
 ):

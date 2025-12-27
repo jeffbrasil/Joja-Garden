@@ -3,16 +3,16 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from main.models.plant import PlantaCatalogo, PlantaUsuario
 
 import sys
 import os
+
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
 from main.api.deps import get_db
 from main.db.base_class import Base
 from main.main import app
-
-
 
 DATABASE_URL_TEST = "sqlite:///:memory:"
 engine = create_engine(
@@ -20,7 +20,6 @@ engine = create_engine(
     connect_args={"check_same_thread" :False},
     poolclass=StaticPool,
 )
-
 
 SessionTest = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -37,6 +36,7 @@ def db_session():
     finally:
         session.close()
     Base.metadata.drop_all(bind=engine)
+
 @pytest.fixture(scope="function")
 def client(db_session):
     
@@ -71,6 +71,7 @@ def usuario_payload():
         "senha": "Senha_cliente1",
         "endereco" : "rua 1" 
 }
+
 @pytest.fixture
 def get_admin_header(client:TestClient, admin_payload):
 
@@ -111,3 +112,33 @@ def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuari
         "header_user": header_user,
         "jardim": resp_jardim.json()
     }
+
+@pytest.fixture
+def planta_usuario(db_session, get_usuario_com_jardim):
+    # 1️⃣ Cria uma planta no catálogo (como se fosse o admin)
+    catalogo = PlantaCatalogo(
+        nome="Planta Teste",
+        nome_cientifico="Planta testensis",
+        categoria="Teste",
+        familia="Testaceae",
+        descricao="Planta de catálogo para testes",
+        img_url="http://teste.com/planta.png",
+    )
+
+    db_session.add(catalogo)
+    db_session.commit()
+    db_session.refresh(catalogo)
+
+    # 2️⃣ Associa a planta ao usuário
+    planta_usuario = PlantaUsuario(
+        apelido="Minha Planta",
+        usuario_id=get_usuario_com_jardim.id,
+        planta=catalogo.id
+        # jardim_id fica None
+    )
+
+    db_session.add(planta_usuario)
+    db_session.commit()
+    db_session.refresh(planta_usuario)
+
+    return planta_usuario
