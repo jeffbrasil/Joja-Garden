@@ -92,15 +92,7 @@ def get_usuario_header(client:TestClient, usuario_payload, get_admin_header):
     
     return  {"Authorization" : f"Bearer {token}"}
 
-@pytest.fixture
-def get_usuario_header_com_id(client:TestClient, usuario_payload, get_admin_header):
 
-    res = client.post("usuario", headers =get_admin_header, json = usuario_payload)
-    login = {"username" : usuario_payload["cpf"], "password" : usuario_payload["senha"]}
-    response = client.post("/auth/token", data = login)
-    token = response.json()["access_token"]
-    
-    return  {"Authorization" : f"Bearer {token}", "id":res.json()["id"] }
 
 @pytest.fixture
 def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuario_header):
@@ -121,6 +113,18 @@ def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuari
         "header_user": header_user,
         "jardim": resp_jardim.json()
     }
+
+
+@pytest.fixture
+def get_usuario_header_com_id(client:TestClient, usuario_payload, get_admin_header):
+
+    res = client.post("usuario", headers =get_admin_header, json = usuario_payload)
+    login = {"username" : usuario_payload["cpf"], "password" : usuario_payload["senha"]}
+    response = client.post("/auth/token", data = login)
+    token = response.json()["access_token"]
+    
+    return  {"Authorization" : f"Bearer {token}", "id":res.json()["id"] }
+
 
 @pytest.fixture
 def planta_catalogo(client: TestClient, get_admin_header):
