@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from main.models.plant import PlantaCatalogo, PlantaUsuario
 
 import sys
 import os
@@ -94,6 +93,16 @@ def get_usuario_header(client:TestClient, usuario_payload, get_admin_header):
     return  {"Authorization" : f"Bearer {token}"}
 
 @pytest.fixture
+def get_usuario_header_com_id(client:TestClient, usuario_payload, get_admin_header):
+
+    res = client.post("usuario", headers =get_admin_header, json = usuario_payload)
+    login = {"username" : usuario_payload["cpf"], "password" : usuario_payload["senha"]}
+    response = client.post("/auth/token", data = login)
+    token = response.json()["access_token"]
+    
+    return  {"Authorization" : f"Bearer {token}", "id":res.json()["id"] }
+
+@pytest.fixture
 def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuario_header):
 
     header_user = get_usuario_header
@@ -114,31 +123,33 @@ def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuari
     }
 
 @pytest.fixture
-def planta_usuario(db_session, get_usuario_com_jardim):
-    # 1️⃣ Cria uma planta no catálogo (como se fosse o admin)
-    catalogo = PlantaCatalogo(
-        nome="Planta Teste",
-        nome_cientifico="Planta testensis",
-        categoria="Teste",
-        familia="Testaceae",
-        descricao="Planta de catálogo para testes",
-        img_url="http://teste.com/planta.png",
-    )
+def planta_catalogo(client: TestClient, get_admin_header):
+    planta_payload ={
+  "nome": "espada-sao-jorge",
+  "nome_cientifico": "nomeciencifico",
+  "categoria": "string",
+  "familia": "string",
+  "descricao": "string",
+  "instrucoes_cuidado": "string",
+  "img_url": "string",
+  "periodicidade_rega": 2,
+  "periodicidade_poda": 30,
+  "periodicidade_adubo": 15
+}
+    resp_planta_catalogo = client.post("/catalogo/adicionar_planta_catalogo",headers = get_admin_header, json=planta_payload)
 
-    db_session.add(catalogo)
-    db_session.commit()
-    db_session.refresh(catalogo)
+    assert resp_planta_catalogo.status_code == 201
+    return resp_planta_catalogo.json()
+    
 
-    # 2️⃣ Associa a planta ao usuário
-    planta_usuario = PlantaUsuario(
-        apelido="Minha Planta",
-        usuario_id=get_usuario_com_jardim.id,
-        planta=catalogo.id
-        # jardim_id fica None
-    )
+@pytest.fixture
+def planta_usuario(client:TestClient, get_admin_header, get_usuario_header_com_id, planta_catalogo):
+    resp_planta_usuario = client.post(f"/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar", headers=get_admin_header, json={
+        "id": planta_catalogo["id"],
+        "apelido": "plantinha",
+        "data_plantio": '2025-12-24'
+    })
+    assert resp_planta_usuario.status_code == 201
+    return resp_planta_usuario.json()
+    
 
-    db_session.add(planta_usuario)
-    db_session.commit()
-    db_session.refresh(planta_usuario)
-
-    return planta_usuario

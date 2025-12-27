@@ -1,18 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sv: "stardew-valley", sans-serif;
-    --font-torus: "torus", sans-serif;
+    --color-primary: #253528;
+    --color-secondary: #49654e;
+    --color-tertiary: #8ba889;
+    --color-quaternary: #ffffff;
+    --color-quinquenary: #e4e6d9;
+    --font-poppins: "Poppins", sans-serif;
 }
 
 /*definições dos elementos de página*/
 @layer components {
     .input {
         @apply bg-slate-50
-            text-slate-400
+        text-tertiary
             w-full
             h-12
             px-5 py-3
@@ -20,13 +25,12 @@
             outline-none
 
             ring-0 ring-transparent
-            hover:ring-1 hover:ring-zinc-300
-            focus:ring-2 focus:ring-zinc-100
+            hover:ring-1 hover:ring-quinquenary
+            focus:ring-2 focus:ring-quinquenary
 
             transition-all duration-300 ease-in-out;
     }
 }
-
 
 /*definições da fonte "stardew-valley"*/
 

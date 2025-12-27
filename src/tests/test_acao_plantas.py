@@ -1,22 +1,14 @@
 #CA01
 import pytest
-@pytest.mark.parametrize("acao", ["rega", "poda", "adubo"])
+from fastapi import status
+from fastapi.testclient import TestClient
+from fastapi import status
 
-def test_registrar_acao_valida(
-    client, get_usuario_header, planta_usuario, acao
-):
-    response = client.post(
-        f"/acao/{planta_usuario.id}/registrar",
-        headers=get_usuario_header,
-        json={
-            "tipo": acao,
-            "descricao": "ação de teste"
-        }
-    )
-
-    assert response.status_code == 201
-    data = response.json()
-    assert data["tipo"] == acao
+@pytest.mark.parametrize("acao", ["poda", "rega", "adubo"])
+def test_registrar_acao_valida(client: TestClient, get_usuario_header_com_id, planta_usuario, acao):
+    response = client.post(f"/acao/{planta_usuario["id"]}/registrar", headers={"Authorization": get_usuario_header_com_id["Authorization"]}, json={"tipo": acao, "descricao": "string", "data_hora": "2025-12-24"})
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()['tipo'] == acao
 
 def test_nao_permite_acao_invalida(
     client, get_usuario_header, planta_usuario
@@ -31,7 +23,7 @@ def test_nao_permite_acao_invalida(
     )
 
     assert response.status_code == 400
-3#ca02
+#ca02
 def test_acao_registra_data_hora(
     client, get_usuario_header, planta_usuario
 ):

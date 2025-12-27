@@ -1,8 +1,8 @@
-"""adicao tabelas
+"""reset
 
-Revision ID: 590aeb859f77
+Revision ID: 521c18d3d2ba
 Revises: 
-Create Date: 2025-12-14 12:05:40.472845
+Create Date: 2025-12-26 09:19:32.276562
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '590aeb859f77'
+revision: str = '521c18d3d2ba'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
