@@ -49,3 +49,14 @@ def create_usuario(
     session.refresh(novo_usuario)
     novo_usuario.tipo_usuario = "usuario"
     return novo_usuario
+
+@router.get("/dados", response_model = UsuarioResponse, status_code = status.HTTP_200_OK)
+def ler_usuario_cpf(
+    cpf : str,
+    current_admin = Depends(get_current_active_admin),
+    session = Depends(get_db)):
+
+    usuario = session.query(Usuario).filter(Usuario.cpf == cpf).first()
+    if not usuario:
+        raise HTTPException(status_code = 400, detail = "Usuario não encontrado")
+    return usuario
