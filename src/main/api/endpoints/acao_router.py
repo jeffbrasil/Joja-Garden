@@ -60,7 +60,7 @@ def listar_acoes(
     if not session.query(PlantaUsuario).filter(PlantaUsuario.usuario_id == current_user.id).first():
         raise HTTPException(status_code= 404, detail = "Planta não pertence a este usuário")
     
-    #A consulta retorna as ações na planta em ordem descendente
+    #A consulta retorna as ações na planta em ordem decrescente
     acoes = session.query(Acao).filter(Acao.planta_id == planta_id).order_by(Acao.data_hora.desc()).all()
 
     return acoes

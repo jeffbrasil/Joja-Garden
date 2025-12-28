@@ -23,5 +23,30 @@ def test_regristo_horario_funciona(client:TestClient, get_usuario_header_com_id,
     assert response.status_code == status.HTTP_201_CREATED
 
 def test_listar_historico(client:TestClient, get_usuario_header_com_id, planta_usuario):
-    response = client.get(f'acao/{planta_usuario['id']}/acoes', headers={"Authorization": get_usuario_header_com_id['Authorization']},)
-    assert response.status_code == status.HTTP_200_OK
+    #criacao de 2 acoes para a lista nao ficar vazia
+    header = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    plantaId = planta_usuario["id"]
+    acao1 = {
+        "tipo": "poda", 
+        "descricao": "string", 
+        "data_hora": "2025-12-23"
+    }
+    acao2 = {
+        "tipo": "adubo", 
+        "descricao": "string", 
+        "data_hora": "2025-12-24"
+    }
+    res1 = client.post(f"/acao/{plantaId}/registrar", headers=header, json=acao1)
+    assert res1.status_code == status.HTTP_201_CREATED
+
+    res2 = client.post(f"/acao/{plantaId}/registrar", headers=header, json=acao2)
+    assert res2.status_code == status.HTTP_201_CREATED
+
+    res3 = client.get(f'/acao/{plantaId}/acoes', headers=header)
+
+    assert res3.status_code == status.HTTP_200_OK
+    assert len(res3.json()) == 2
+    assert res3.json()[1]['tipo'] == 'poda'
+    assert res3.json()[0]['tipo'] == 'adubo'
+
+    assert res3.json()[1]['data_hora'] < res3.json()[0]['data_hora']
