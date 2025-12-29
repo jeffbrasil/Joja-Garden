@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from main.api.deps import get_db
-from main.core.security import get_password_hash
+from main.api.deps import get_db, get_current_active_admin
+from main.core.security import get_password_hash, verify_password
 from main.models.user import Admin, Super_usuario
 from main.schemas.admin_schema import AdminCreate, AdminResponse
+from main.schemas.alterar_senha_schema import AlterarSenha
 from services.verificacoes import valida_cpf, valida_senha
 
 router = APIRouter()
@@ -56,3 +57,30 @@ def read_admin(admin_in: int, session=Depends(get_db)):
     if not admin:
         raise HTTPException(status_code=404, detail="Administrador não encontrado")
     return admin
+@router.put("/{admin_id}/alterar-senha", status_code = status.HTTP_200_OK)
+def alterar_senha(
+    dados : AlterarSenha,
+    current_admin = Depends(get_current_active_admin),
+    session = Depends(get_db)
+):
+    #verifica se a senha atual está correta
+    if not verify_password(dados.senha_atual, current_admin.hash_senha):
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "A senha atual está incorreta")
+    
+    #verifica se a nova senha é igual a atuaç
+    if verify_password(dados.nova_senha,current_admin.hash_senha):
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "A nova senha deve ser diferente da atual")
+    
+    #verifica se a nova senha é uma senha válida.
+    if not valida_senha(dados.nova_senha):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha inválida"
+        )
+
+    current_admin.hash_senha = get_password_hash(dados.nova_senha)
+
+    session.add(current_admin)
+    session.commit()
+
+    return {"msg" : "A senha foi alterada com sucesso."}
