@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from main.api.deps import get_current_active_admin, get_db
+from main.api.deps import get_current_active_admin, get_db, get_current_user
 from main.models.plant import PlantaCatalogo, PlantaUsuario
 from main.models.user import Usuario, Admin
 from main.schemas.planta_catalogo_schema import (
@@ -45,3 +45,21 @@ def adicionar_planta_ao_usuario(
     session.refresh(nova_planta_usuario)
 
     return nova_planta_usuario
+
+@router.get(
+    "/{planta_id}",
+    response_model = PlantaUsuarioResponse,
+    status_code = status.HTTP_200_OK
+)
+def visualizar_minha_planta(
+    planta_id: int,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    
+    planta = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id, PlantaUsuario.usuario_id == current_user.id).first()
+
+    if not planta:
+        raise HTTPException(status_code = 400, detail = "Planta não encontrada")
+    
+    return planta

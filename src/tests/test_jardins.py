@@ -1,39 +1,52 @@
-def test_usuario_cria_jardim_com_sucesso(client, get_usuario_header):
+from fastapi.testclient import TestClient
+from fastapi import status
+
+def test_usuario_cria_jardim_com_sucesso(client: TestClient, get_usuario_header):
     response = client.post(
-        "/criar_jardim",
+        "/jardim/criar_jardim",
         headers=get_usuario_header,
         json={"nome": "Meu Jardim"}
     )
 
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["nome"] == "Meu Jardim"
 
-def test_usuario_nao_pode_criar_jardim_com_nome_duplicado(client, get_usuario_header):
+def test_usuario_nao_pode_criar_jardim_com_nome_duplicado(client: TestClient, get_usuario_header):
     client.post(
-        "/criar_jardim",
+        "/jardim/criar_jardim",
         headers=get_usuario_header,
         json={"nome": "Jardim Repetido"}
     )
 
     response = client.post(
-        "/criar_jardim",
+        "/jardim/criar_jardim",
         headers=get_usuario_header,
         json={"nome": "Jardim Repetido"}
     )
 
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Já existe" in response.json()["detail"]
 
-def test_nao_pode_adicionar_planta_que_nao_e_do_usuario(
-    client, get_usuario_header, jardim_criado
-):
-    response = client.post(
-        f"/{jardim_criado.id}/adicionar-planta/999",
-        headers=get_usuario_header
-    )
+'''
+To precisando de um GET pra buscar a planta do usuario pelo ID, ou que ao adicionar a planta num jardim tenho um retorno de como o jardim está e não só uma mensagem
+'''
+# def test_aidiconar_planta_no_jardim(client: TestClient, jardim_criado, planta_usuario,get_usuario_header_com_id):
+#     response = client.post(f'/jardim/{jardim_criado["id"]}/adicionar-planta/{planta_usuario["id"]}', headers={"Authorization": get_usuario_header_com_id['Authorization']})
+#     assert response.status_code == status.HTTP_200_OK
+#     assert len(jardim_criado['plantas']) == 1
 
-    assert response.status_code == 404
+    
+
+# def test_nao_pode_adicionar_planta_que_nao_e_do_usuario(
+#     client, get_usuario_header, jardim_criado
+# ):
+#     response = client.post(
+#         f"/{jardim_criado['id']}/adicionar-planta/999",
+#         headers=get_usuario_header
+#     )
+
+#     assert response.status_code == 404
 
 
 

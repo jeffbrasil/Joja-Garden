@@ -4,10 +4,11 @@ from pydantic import BaseModel,ConfigDict
 from main.schemas.planta_catalogo_schema import PlantaUsuarioResponse
 from main.models.acao_tipo import TipoAcao
 from datetime import datetime
+
 class AcaoBase(BaseModel):
     tipo : TipoAcao
     descricao : Optional[str]
-    data_hora : Optional[datetime] = None
+    data_hora : datetime
 
 class AcaoCreate(AcaoBase):
     pass

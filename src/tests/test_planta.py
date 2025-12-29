@@ -144,6 +144,18 @@ class TestVisualizarCatalogo:
         response = client.get("/catalogo/visualizar")
 
         assert(response.status_code == status.HTTP_401_UNAUTHORIZED)
+    
+    def test_admin_e_usuario_visualizam_catalogo_vazio(self, client:TestClient, get_admin_header, get_usuario_header):
+        admin = client.get("/catalogo/visualizar")
+        usuario = client.get("/catalogo/visualizar")
+
+        dados_admin = admin.json()
+        dados_usuario = usuario.json()
+
+        assert(admin.status_code == status.HTTP_200_OK)
+        assert(usuario.status_code == status.HTTP_200_OK)
+        assert isinstance(dados_admin, list)
+        assert isinstance(dados_usuario, list)
 
 class TestAdicionarPlantaAoUsuario:
 

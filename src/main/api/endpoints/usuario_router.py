@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from main.api.deps import get_current_active_admin, get_db  # <--- Importante
-from main.core.security import get_password_hash
+from main.api.deps import get_current_active_admin, get_db, get_current_user  # <--- Importante
+from main.core.security import get_password_hash, verify_password
 from main.models.user import Super_usuario, Usuario
 from main.schemas.usuario_schema import UsuarioCreate, UsuarioResponse
+from main.schemas.alterar_senha_schema import AlterarSenha
 from services.verificacoes import valida_cpf, valida_senha
 
 router = APIRouter()
@@ -49,3 +50,51 @@ def create_usuario(
     session.refresh(novo_usuario)
     novo_usuario.tipo_usuario = "usuario"
     return novo_usuario
+
+@router.get("/dados", response_model = UsuarioResponse, status_code = status.HTTP_200_OK)
+def ler_usuario_cpf(
+    cpf : str,
+    current_admin = Depends(get_current_active_admin),
+    session = Depends(get_db)):
+
+    usuario = session.query(Usuario).filter(Usuario.cpf == cpf).first()
+    if not usuario:
+        raise HTTPException(status_code = 400, detail = "Usuario não encontrado")
+    return usuario
+
+@router.get(f"/dados-cadastrais", response_model = UsuarioResponse, status_code = status.HTTP_200_OK)
+
+def meus_dados(
+    current_user = Depends(get_current_user)
+    
+):
+
+    return current_user
+
+@router.put("/alterar-senha", status_code = status.HTTP_200_OK)
+def alterar_senha(
+    senha : AlterarSenha,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    #verifica a senha digitada correponde a atual
+    if not verify_password(senha.senha_atual, current_user.hash_senha):
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail="A senha atual está incorreta")
+
+    #verifica se a senha nova é igual a atual
+    if verify_password(senha.nova_senha,current_user.hash_senha):
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "A nova senha deve ser diferente da atual")
+    
+    if not valida_senha(senha.nova_senha):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Senha inválida"
+        )
+    
+    current_user.hash_senha = get_password_hash(senha.nova_senha)
+    
+    session.add(current_user)
+    session.commit()
+
+    return {"msg" : "A senha foi alterada com sucesso"}
+    #salva a senha no banco

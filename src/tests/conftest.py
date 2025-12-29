@@ -6,13 +6,12 @@ from sqlalchemy.pool import StaticPool
 
 import sys
 import os
+
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
 from main.api.deps import get_db
 from main.db.base_class import Base
 from main.main import app
-
-
 
 DATABASE_URL_TEST = "sqlite:///:memory:"
 engine = create_engine(
@@ -20,7 +19,6 @@ engine = create_engine(
     connect_args={"check_same_thread" :False},
     poolclass=StaticPool,
 )
-
 
 SessionTest = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -37,6 +35,7 @@ def db_session():
     finally:
         session.close()
     Base.metadata.drop_all(bind=engine)
+
 @pytest.fixture(scope="function")
 def client(db_session):
     
@@ -66,11 +65,28 @@ def admin_payload():
 def usuario_payload():
     return {
         "nome": "Cliente Feliz",
-        "cpf": "27894266000",
+        "cpf": "13765913081",
         "email": "cliente@email.com",
         "senha": "Senha_cliente1",
         "endereco" : "rua 1" 
 }
+
+@pytest.fixture
+def planta_catalogo_payload():
+    return {
+        "nome": "Samambaia Americana",
+        "nome_cientifico": "Nephrolepis exaltata",
+        "categoria" : "Polypodiales",
+        "familia" : "Nephrolepidaceae",
+        "descricao": "Gosta de sombra e umidade.",
+        "instrucoes_cuidado": "Sombra parcial",
+        "img_url" : "finge que tem um link aqui",
+        "periodicidade_rega": "2",
+        "periodicidade_poda": "30",
+        "periodicidade_adubo": "15"
+        
+    }
+
 @pytest.fixture
 def get_admin_header(client:TestClient, admin_payload):
 
@@ -92,7 +108,27 @@ def get_usuario_header(client:TestClient, usuario_payload, get_admin_header):
     
     return  {"Authorization" : f"Bearer {token}"}
 
+
+
+
+
+
+
+
+
+
+
 @pytest.fixture
+def get_usuario_header_com_id(client:TestClient, usuario_payload, get_admin_header):
+
+    res = client.post("usuario", headers =get_admin_header, json = usuario_payload)
+    login = {"username" : usuario_payload["cpf"], "password" : usuario_payload["senha"]}
+    response = client.post("/auth/token", data = login)
+    token = response.json()["access_token"]
+    
+    return  {"Authorization" : f"Bearer {token}", "id":res.json()["id"] }
+
+
 def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuario_header):
 
     header_user = get_usuario_header
@@ -111,3 +147,49 @@ def get_usuario_com_jardim(client, get_admin_header, usuario_payload, get_usuari
         "header_user": header_user,
         "jardim": resp_jardim.json()
     }
+
+
+
+
+
+@pytest.fixture
+def planta_catalogo(client: TestClient, get_admin_header):
+    planta_payload ={
+  "nome": "espada-sao-jorge",
+  "nome_cientifico": "nomeciencifico",
+  "categoria": "string",
+  "familia": "string",
+  "descricao": "string",
+  "instrucoes_cuidado": "string",
+  "img_url": "string",
+  "periodicidade_rega": 2,
+  "periodicidade_poda": 30,
+  "periodicidade_adubo": 15
+}
+    resp_planta_catalogo = client.post("/catalogo/adicionar_planta_catalogo",headers = get_admin_header, json=planta_payload)
+
+    assert resp_planta_catalogo.status_code == 201
+    return resp_planta_catalogo.json()
+    
+
+@pytest.fixture
+def planta_usuario(client:TestClient, get_admin_header, get_usuario_header_com_id, planta_catalogo):
+    resp_planta_usuario = client.post(f"/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar", headers=get_admin_header, json={
+        "id": planta_catalogo["id"],
+        "apelido": "plantinha",
+        "data_plantio": '2025-12-24'
+    })
+    assert resp_planta_usuario.status_code == 201
+    return resp_planta_usuario.json()
+    
+@pytest.fixture
+def jardim_criado(client, get_usuario_header_com_id):
+    response = client.post(
+        "/jardim/criar_jardim",
+        headers={'Authorization': get_usuario_header_com_id['Authorization']},
+        json={"nome": "Jardim1"}
+    )
+
+    assert response.status_code == 201
+    return response.json()
+
