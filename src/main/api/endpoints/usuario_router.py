@@ -10,7 +10,6 @@ from services.verificacoes import valida_cpf, valida_senha
 
 router = APIRouter()
 
-
 @router.post("/", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def create_usuario(
     usuario_in: UsuarioCreate,
