@@ -63,3 +63,22 @@ def visualizar_minha_planta(
         raise HTTPException(status_code = 400, detail = "Planta não encontrada")
     
     return planta
+
+@router.delete("/{planta_id}", status_code = status.HTTP_204_NO_CONTENT)
+def remover_minha_planta(
+    planta_id : int,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    #Verifica se a planta que o usuário quer deletar é dele mesmo
+
+    planta = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id, PlantaUsuario.usuario_id == current_user.id).first()
+
+    if not planta:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Planta não encontrada")
+    
+    session.delete(planta)
+    session.commit()
+
+    return {"msg" : "Planta Excluída com sucesso"}
+    
