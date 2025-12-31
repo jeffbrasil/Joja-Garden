@@ -7,7 +7,8 @@ from main.models.jardim import Jardim
 from main.models.user import Usuario
 
 from main.schemas.jardim_schema import JardimCreate, JardimResponse
-
+from main.schemas.planta_movimentacao_schema import MoverPlanta
+from main.schemas.planta_catalogo_schema import PlantaUsuarioResponse
 router = APIRouter()
 
 @router.post(
@@ -86,3 +87,65 @@ def remover_jardim(
     session.commit()
 
     return {"msg" : "Jardim excluído com sucesso"}
+
+@router.put("/{planta_id}/mover-planta")
+def mover_planta_de_jardim(
+    planta_id : int,
+    dados_movimentacao : MoverPlanta,
+    
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+
+    
+    jardim_novo = session.query(Jardim).filter(Jardim.id == dados_movimentacao.jardim_novo, Jardim.usuario_id == current_user.id).first()
+    #verifica se o jardim de destino existe e percente ao usuário
+    if not jardim_novo:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim novo não encontrado")
+
+    planta = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id, PlantaUsuario.usuario_id == current_user.id).first()
+
+    #verifica se a planta existe e pertence ao jardim indicado
+    if not planta:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Planta não pertence ao usuário ou não pertence ao jardim")
+    #movimenta a planta de jardim
+    planta.jardim_id = dados_movimentacao.jardim_novo
+    session.add(planta)
+    session.commit()
+    session.refresh(planta)
+    #commita as mudanças no banco
+    return {"msg" : "Planta movida com sucesso"}
+
+@router.put("/{jardim_id}/renomear")
+def renomear_planta(
+    jardim_id : int,
+    novo_nome : str,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    
+    jardim = session.query(Jardim).filter(Jardim.id == jardim_id, Jardim.usuario_id == current_user.id).first()
+
+    if not jardim:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim não encontrado")
+    
+    if jardim.nome == novo_nome:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim já possui este nome")    
+    
+    jardim.nome = novo_nome
+    
+    session.add(jardim)
+    session.commit()
+    session.refresh(jardim)
+
+    return {"msg" : "Nome do jardim alterado com sucesso."}
+
+@router.get("/{jardim_id}", status_code = status.HTTP_200_OK, response_model = List[PlantaUsuarioResponse])
+def listar_jardim(
+    jardim_id : int,
+    session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    jardim = session.query(PlantaUsuario)
+
+    
