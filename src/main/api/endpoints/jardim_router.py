@@ -62,3 +62,27 @@ def adicionar_planta_jardim(
     session.commit()
 
     return {"message" : f"Planta {planta.apelido} foi adicionada ao jardim {jardim.nome}"}
+
+@router.delete("/{jardim_id}")
+def remover_jardim(
+    jardim_id : int,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    #verifica se o jardim é do usuário
+
+    jardim = session.query(Jardim).filter(Jardim.id == jardim_id, Jardim.usuario_id == current_user.id).first()
+
+    if not jardim:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim não encontrado")
+    #verificar se o jardim está vazio
+
+    tem_planta = session.query(PlantaUsuario).filter(PlantaUsuario.jardim_id == jardim_id).first()
+    
+    if tem_planta:
+        raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = "O jardim precisa estar sem plantas para ser excluido")
+
+    session.delete(jardim)
+    session.commit()
+
+    return {"msg" : "Jardim excluído com sucesso"}
