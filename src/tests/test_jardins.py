@@ -31,10 +31,11 @@ def test_usuario_nao_pode_criar_jardim_com_nome_duplicado(client: TestClient, ge
 '''
 To precisando de um GET pra buscar a planta do usuario pelo ID, ou que ao adicionar a planta num jardim tenho um retorno de como o jardim está e não só uma mensagem
 '''
-# def test_aidiconar_planta_no_jardim(client: TestClient, jardim_criado, planta_usuario,get_usuario_header_com_id):
-#     response = client.post(f'/jardim/{jardim_criado["id"]}/adicionar-planta/{planta_usuario["id"]}', headers={"Authorization": get_usuario_header_com_id['Authorization']})
-#     assert response.status_code == status.HTTP_200_OK
-#     assert len(jardim_criado['plantas']) == 1
+
+def test_aidiconar_planta_no_jardim(client: TestClient, jardim_criado, planta_usuario,get_usuario_header_com_id):
+     response = client.post(f'/jardim/{jardim_criado["id"]}/adicionar-planta/{planta_usuario["id"]}', headers={"Authorization": get_usuario_header_com_id['Authorization']})
+     assert response.status_code == status.HTTP_200_OK
+     assert len(jardim_criado['plantas']) == 1
 
     
 

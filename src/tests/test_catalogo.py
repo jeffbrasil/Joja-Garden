@@ -60,8 +60,8 @@ class TestVisualizarCatalogo:
         assert(response.status_code == status.HTTP_401_UNAUTHORIZED)
     
     def test_admin_e_usuario_visualizam_catalogo_vazio(self, client:TestClient, get_admin_header, get_usuario_header):
-        admin = client.get("/catalogo/visualizar")
-        usuario = client.get("/catalogo/visualizar")
+        admin = client.get("/catalogo/visualizar", headers=get_admin_header)
+        usuario = client.get("/catalogo/visualizar", headers=get_usuario_header)
 
         dados_admin = admin.json()
         dados_usuario = usuario.json()
