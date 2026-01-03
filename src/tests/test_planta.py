@@ -108,3 +108,10 @@ class TestAdicionarPlantaAoUsuario:
         response = client.post(f"/planta/usuario/{usuario_id}/adicionar", json = planta_usuario)
 
         assert(response.status_code == status.HTTP_401_UNAUTHORIZED)
+
+class TestVisualizarPlantaUsuario:
+    def test_visulizar_planta_do_usuario(self, client:TestClient, get_usuario_header_com_id, planta_usuario):
+        current_user = {'Authorization' : get_usuario_header_com_id['Authorization']}
+        response = client.get(f'/planta/{planta_usuario['id']}', headers=current_user)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['apelido'] == planta_usuario['apelido']
