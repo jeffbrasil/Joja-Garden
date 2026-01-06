@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Poppins } from "next/font/google";
-
 import Navbar from "../components/navbar";
+import { AuthProvider } from "@/context/AuthContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -21,13 +21,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
-      {/* Adicionei a cor de fundo e fonte aqui para garantir consistência */}
-      <body className="font-poppins bg-quinquenary antialiased">
-        <Navbar />
-
-        {/* O padding-top (pt-16) é necessário porque o Navbar é fixo */}
-        <main className="pt-16 min-h-screen">{children}</main>
+    <html lang="pt">
+      <body
+        className={`font-poppins bg-quinquenary antialiased ${poppins.variable}`}
+      >
+        {/* 2. O AuthProvider deve abraçar TUDO (Navbar e Conteúdo) */}
+        {/* Assim, tanto o Navbar quanto as páginas saberão quem está logado */}
+        <AuthProvider>
+          <Navbar />
+          <main className="pt-16 min-h-screen">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

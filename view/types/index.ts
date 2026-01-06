@@ -1,9 +1,9 @@
 // Baseado em src/main/schemas/usuario_schema.py e auth
 export interface IUser {
   id: number;
-  cpf: string;
-  nome?: string;
-  // adicione outros campos que o backend retorna
+  nome: string;
+  email: string;
+  tipo_usuario: "admin" | "usuario";
 }
 
 export interface ILoginResponse {

@@ -12,7 +12,7 @@ class UsuarioCreate(BaseModel):
 class UsuarioResponse(BaseModel):
     id: int
     nome: str
-    email: EmailStr
+    email: EmailStr | None = None
     tipo_usuario: str = "usuario"
 
     class Config:
