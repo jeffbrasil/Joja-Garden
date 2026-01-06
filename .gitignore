@@ -209,3 +209,4 @@ __marimo__/
 # banco de dados
 
 .db
+src/banco.db
