@@ -71,6 +71,21 @@ def meus_dados(
 
     return current_user
 
+
+@router.get("/all", response_model=List[UsuarioResponse], status_code=status.HTTP_200_OK)
+def list_all_usuarios(
+    session: Session = Depends(get_db),
+    current_admin=Depends(get_current_active_admin), 
+):
+    """
+    Lista todos os usuários cadastrados no banco de dados.
+    (Exclusivo para Administradores)
+    """
+    # 1. Busca todos os usuários na tabela Usuario
+    usuarios = session.query(Usuario).all()
+    
+    return usuarios
+
 @router.put("/alterar-senha", status_code = status.HTTP_200_OK)
 def alterar_senha(
     senha : AlterarSenha,
@@ -123,7 +138,7 @@ def delete_usuario(
     session.commit()
     
     return {
-        "message": f"Usuário \"{nome_usuario_deletado}\" foi deletado."
+        "message": f"Usuário {nome_usuario_deletado} foi deletado."
     }
 
 
