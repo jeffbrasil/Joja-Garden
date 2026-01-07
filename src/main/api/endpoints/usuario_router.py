@@ -79,8 +79,8 @@ def meus_dados(current_user=Depends(get_current_user)):
         # Força o FastAPI a usar o molde de Admin (que tem tipo_usuario="admin")
         return AdminResponse.model_validate(current_user)
 
-        # Se não for admin, retorna como usuário comum
-        return current_user
+    # Se não for admin, retorna como usuário comum
+    return current_user
 
 
 @router.put("/alterar-senha", status_code=status.HTTP_200_OK)
