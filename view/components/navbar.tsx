@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   Leaf,
@@ -13,13 +13,12 @@ import {
   UserPlus,
   ShieldCheck,
   Users,
-  Flower2,
+  Flower2, // Usaremos este ícone para "Minhas Plantas"
   LogOut,
   ChevronDown,
   User,
 } from "lucide-react";
 
-// Componentes do Shadcn
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -42,6 +41,7 @@ export default function Navbar() {
 
   const { user, logout, isAdmin } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
@@ -49,12 +49,20 @@ export default function Navbar() {
     router.push("/login");
   };
 
-  // Função para fechar o Sheet ao clicar em um link
   const closeMenu = () => setIsOpen(false);
+
+  // 1. Atualizei a lista de links para incluir "Minhas Plantas"
+  // A ordem sugerida: Home -> Minhas Plantas (O Principal) -> Jardins (A Organização) -> Catálogo (O Mundo)
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "Minhas Plantas", href: "/my-plants" }, // Nova Rota
+    { name: "Jardins", href: "/my-gardens" },
+    { name: "Catálogo", href: "/catalog" },
+  ];
 
   return (
     <nav className="fixed top-0 left-0 w-full h-16 bg-quaternary/95 backdrop-blur-sm shadow-sm shadow-tertiary/20 z-50 px-6 md:px-12 flex items-center justify-between font-poppins transition-all">
-      {/* --- LOGO --- */}
+      {/* --- LOGO (Esquerda) --- */}
       <Link
         href="/"
         className="flex items-center gap-2 group cursor-pointer"
@@ -68,29 +76,31 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* --- LINKS DESKTOP (Apenas telas grandes) --- */}
-      <div className="hidden md:flex items-center gap-8">
-        <Link
-          href="/"
-          className="text-primary font-medium hover:text-secondary hover:scale-105 transition-all text-sm"
-        >
-          Home
-        </Link>
-        <Link
-          href="/my-gardens"
-          className="text-primary font-medium hover:text-secondary hover:scale-105 transition-all text-sm"
-        >
-          Jardins
-        </Link>
-        <Link
-          href="/catalog"
-          className="px-4 py-2 bg-primary text-white rounded-full text-sm font-semibold hover:bg-secondary hover:shadow-md hover:shadow-tertiary/40 transition-all transform hover:-translate-y-0.5"
-        >
-          Catálogo
-        </Link>
+      {/* --- LINKS DESKTOP (Centro) --- */}
+      <div className="hidden md:flex items-center gap-4">
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`
+                px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300
+                ${
+                  isActive
+                    ? "bg-primary text-white shadow-md shadow-tertiary/40 transform scale-105" // SELECIONADO
+                    : "text-primary hover:bg-primary/10 hover:text-primary hover:scale-105" // NÃO SELECIONADO
+                }
+              `}
+            >
+              {link.name}
+            </Link>
+          );
+        })}
       </div>
 
-      {/* --- MENU HAMBÚRGUER (SHADCN SHEET) --- */}
+      {/* --- MENU HAMBÚRGUER (Direita) --- */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
@@ -112,7 +122,7 @@ export default function Navbar() {
             </SheetTitle>
           </SheetHeader>
 
-          {/* Área de Scroll para menus longos */}
+          {/* Área de Scroll */}
           <ScrollArea className="h-[calc(100vh-80px)]">
             <div className="flex flex-col gap-6 p-6">
               {/* 1. NAVEGAÇÃO BÁSICA */}
@@ -120,26 +130,39 @@ export default function Navbar() {
                 <p className="text-xs font-semibold text-tertiary uppercase tracking-wider">
                   Navegação
                 </p>
+                
                 <Link href="/" onClick={closeMenu}>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start gap-3 text-primary hover:text-secondary font-normal"
+                    className={`w-full justify-start gap-3 font-normal ${pathname === "/" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
                   >
                     <Home size={18} /> Home
                   </Button>
                 </Link>
+
+                {/* --- NOVO ITEM: MINHAS PLANTAS --- */}
+                <Link href="/my-plants" onClick={closeMenu}>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start gap-3 font-normal ${pathname === "/view/app/plants" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
+                  >
+                    <Flower2 size={18} /> Minhas Plantas
+                  </Button>
+                </Link>
+
                 <Link href="/my-gardens" onClick={closeMenu}>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start gap-3 text-primary hover:text-secondary font-normal"
+                    className={`w-full justify-start gap-3 font-normal ${pathname === "/my-gardens" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
                   >
                     <Sprout size={18} /> Meus Jardins
                   </Button>
                 </Link>
+
                 <Link href="/catalog" onClick={closeMenu}>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start gap-3 text-primary hover:text-secondary font-normal"
+                    className={`w-full justify-start gap-3 font-normal ${pathname === "/catalog" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
                   >
                     <BookOpen size={18} /> Catálogo
                   </Button>
@@ -162,73 +185,36 @@ export default function Navbar() {
                     </div>
 
                     <Link href="/sign-up-user" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal">
                         <UserPlus size={18} /> Novo Usuário
                       </Button>
                     </Link>
 
                     <Link href="/sign-up-admin" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal">
                         <ShieldCheck size={18} /> Novo Admin
                       </Button>
                     </Link>
 
-                    <Link href="/list-users" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                    <Link href="/manage-users" onClick={closeMenu}>
+                      <Button variant="ghost" className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal">
                         <Users size={18} /> Gerenciar Usuários
                       </Button>
                     </Link>
 
-                    {/* Submenu Plantas (Collapsible) */}
-                    <Collapsible
-                      open={isPlantsOpen}
-                      onOpenChange={setIsPlantsOpen}
-                      className="space-y-1"
-                    >
+                    <Collapsible open={isPlantsOpen} onOpenChange={setIsPlantsOpen} className="space-y-1">
                       <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-between text-gray-600 hover:text-primary font-normal"
-                        >
-                          <span className="flex items-center gap-3">
-                            <Flower2 size={18} /> Adicionar Plantas
-                          </span>
-                          <ChevronDown
-                            size={16}
-                            className={`transition-transform duration-200 ${isPlantsOpen ? "rotate-180" : ""}`}
-                          />
+                        <Button variant="ghost" className="w-full justify-between text-gray-600 hover:text-primary font-normal">
+                          <span className="flex items-center gap-3"><Flower2 size={18} /> Adicionar Plantas</span>
+                          <ChevronDown size={16} className={`transition-transform duration-200 ${isPlantsOpen ? "rotate-180" : ""}`} />
                         </Button>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="pl-4 space-y-1">
-                        <Link
-                          href="/catalogo/adicionar_planta_catalogo"
-                          onClick={closeMenu}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-gray-500 hover:text-secondary font-light pl-9"
-                          >
-                            • Ao Catálogo Geral
-                          </Button>
+                        <Link href="/catalogo/adicionar_planta_catalogo" onClick={closeMenu}>
+                          <Button variant="ghost" size="sm" className="w-full justify-start text-gray-500 hover:text-secondary font-light pl-9">• Ao Catálogo Geral</Button>
                         </Link>
                         <Link href="/admin/atribuir-planta" onClick={closeMenu}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-gray-500 hover:text-secondary font-light pl-9"
-                          >
-                            • A um Usuário
-                          </Button>
+                          <Button variant="ghost" size="sm" className="w-full justify-start text-gray-500 hover:text-secondary font-light pl-9">• A um Usuário</Button>
                         </Link>
                       </CollapsibleContent>
                     </Collapsible>
@@ -239,42 +225,23 @@ export default function Navbar() {
 
               {/* 3. CONTA / LOGOUT */}
               <div className="space-y-4">
-                <p className="text-xs font-semibold text-tertiary uppercase tracking-wider">
-                  Conta
-                </p>
+                <p className="text-xs font-semibold text-tertiary uppercase tracking-wider">Conta</p>
                 {user ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 p-3 bg-quaternary/50 rounded-lg border border-tertiary/5">
-                      <div className="bg-primary/10 p-2 rounded-full text-primary">
-                        <User size={20} />
-                      </div>
+                      <div className="bg-primary/10 p-2 rounded-full text-primary"><User size={20} /></div>
                       <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-primary truncate">
-                          {user.nome}
-                        </p>
-                        <p className="text-xs text-tertiary truncate">
-                          {user.email || user.tipo_usuario}
-                        </p>
+                        <p className="text-sm font-bold text-primary truncate">{user.nome}</p>
+                        <p className="text-xs text-tertiary truncate">{user.email || user.tipo_usuario}</p>
                       </div>
                     </div>
-
-                    <Button
-                      onClick={handleLogout}
-                      variant="ghost"
-                      className="w-full justify-center gap-2 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 font-medium"
-                    >
+                    <Button onClick={handleLogout} variant="ghost" className="w-full justify-center gap-2 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 font-medium">
                       <LogOut size={18} /> Sair
                     </Button>
                   </div>
                 ) : (
-                  <Link
-                    href="/login"
-                    onClick={closeMenu}
-                    className="w-full block"
-                  >
-                    <Button className="w-full rounded-full bg-primary hover:bg-secondary text-white font-semibold">
-                      Fazer Login
-                    </Button>
+                  <Link href="/login" onClick={closeMenu} className="w-full block">
+                    <Button className="w-full rounded-full bg-primary hover:bg-secondary text-white font-semibold">Fazer Login</Button>
                   </Link>
                 )}
               </div>

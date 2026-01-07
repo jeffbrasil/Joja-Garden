@@ -3,6 +3,7 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import Navbar from "../components/navbar";
 import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "@/components/ui/sonner"
 
 const poppins = Poppins({
   subsets: ["latin"],
