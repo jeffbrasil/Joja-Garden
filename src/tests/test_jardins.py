@@ -1,7 +1,8 @@
 from fastapi.testclient import TestClient
 from fastapi import status
 
-def test_usuario_cria_jardim_com_sucesso(client: TestClient, get_usuario_header):
+
+def test_usuario_cria_jardim_com_sucesso( client: TestClient, get_usuario_header):
     response = client.post(
         "/jardim/criar_jardim",
         headers=get_usuario_header,
@@ -12,7 +13,7 @@ def test_usuario_cria_jardim_com_sucesso(client: TestClient, get_usuario_header)
     data = response.json()
     assert data["nome"] == "Meu Jardim"
 
-def test_usuario_nao_pode_criar_jardim_com_nome_duplicado(client: TestClient, get_usuario_header):
+def test_usuario_nao_pode_criar_jardim_com_nome_duplicado( client: TestClient, get_usuario_header):
     client.post(
         "/jardim/criar_jardim",
         headers=get_usuario_header,
@@ -28,13 +29,24 @@ def test_usuario_nao_pode_criar_jardim_com_nome_duplicado(client: TestClient, ge
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "Já existe" in response.json()["detail"]
 
-'''
-To precisando de um GET pra buscar a planta do usuario pelo ID, ou que ao adicionar a planta num jardim tenho um retorno de como o jardim está e não só uma mensagem
-'''
-# def test_aidiconar_planta_no_jardim(client: TestClient, jardim_criado, planta_usuario,get_usuario_header_com_id):
-#     response = client.post(f'/jardim/{jardim_criado["id"]}/adicionar-planta/{planta_usuario["id"]}', headers={"Authorization": get_usuario_header_com_id['Authorization']})
-#     assert response.status_code == status.HTTP_200_OK
-#     assert len(jardim_criado['plantas']) == 1
+
+def test_aidiconar_planta_no_jardim( client: TestClient, planta_usuario,get_usuario_header_com_id, planta_catalogo, get_admin_header):
+        
+    jardim = client.post(
+        "/jardim/criar_jardim",
+        headers={"Authorization": get_usuario_header_com_id['Authorization']},
+        json={"nome": "Meu Jardim"}
+    )
+
+    resp_planta_usuario = client.post(f"/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar", headers=get_admin_header, json={
+        "id": planta_catalogo["id"],
+        "apelido": "plantinha",
+        "data_plantio": '2025-12-24'
+    })
+    response2 = client.post(f'/jardim/{jardim.json()["id"]}/adicionar-planta/{resp_planta_usuario.json()["id"]}', headers={"Authorization": get_usuario_header_com_id['Authorization']})
+
+    assert response2.status_code == status.HTTP_200_OK
+    assert jardim.status_code == status.HTTP_201_CREATED
 
     
 

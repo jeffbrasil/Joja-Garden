@@ -5,6 +5,8 @@ from main.api.deps import get_current_user, get_db
 from main.models.plant import PlantaUsuario
 from main.models.jardim import Jardim
 from main.models.user import Usuario
+from sqlalchemy.orm import Session
+from typing import List
 
 from main.schemas.jardim_schema import JardimCreate, JardimResponse
 
@@ -62,3 +64,25 @@ def adicionar_planta_jardim(
     session.commit()
 
     return {"message" : f"Planta {planta.apelido} foi adicionada ao jardim {jardim.nome}"}
+
+@router.get(
+    "/meus-jardins",
+    response_model=List[JardimResponse], # Retorna uma lista de objetos JardimResponse
+    status_code=status.HTTP_200_OK
+)
+def listar_meus_jardins(
+    current_usuario: Usuario = Depends(get_current_user), # Obtém o usuário logado
+    session: Session = Depends(get_db)
+):
+    """
+    Lista todos os jardins que pertencem ao usuário autenticado.
+    (Acesso apenas para o Usuário Logado)
+    """
+    
+    jardins_do_usuario = (
+        session.query(Jardim)
+        .filter(Jardim.usuario_id == current_usuario.id)
+        .all()
+    )
+    
+    return jardins_do_usuario
