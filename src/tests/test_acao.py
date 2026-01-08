@@ -11,7 +11,7 @@ def test_registrar_acao_valida(client: TestClient, get_usuario_header_com_id, pl
 
 @pytest.mark.parametrize("acao", ["rega"])
 def test_regristo_horario_falha(client:TestClient, get_usuario_header_com_id, planta_usuario, acao):
-    response = client.post(f"/acao/{planta_usuario["id"]}/registrar", headers={"Authorization": get_usuario_header_com_id['Authorization']}, json={"tipo": acao, "descricao": "string"})
+    response = client.post(f'/acao/{planta_usuario["id"]}/registrar', headers={"Authorization": get_usuario_header_com_id['Authorization']}, json={"tipo": acao, "descricao": "string"})
     assert response.json()["detail"][0]["loc"][1] == "data_hora"
     assert response.json()["detail"][0]["type"] == "missing"
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
