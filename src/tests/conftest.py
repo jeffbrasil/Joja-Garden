@@ -174,7 +174,7 @@ def planta_catalogo(client: TestClient, get_admin_header):
 
 @pytest.fixture
 def planta_usuario(client:TestClient, get_admin_header, get_usuario_header_com_id, planta_catalogo):
-    resp_planta_usuario = client.post(f"/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar", headers=get_admin_header, json={
+    resp_planta_usuario = client.post(f'/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar', headers=get_admin_header, json={
         "id": planta_catalogo["id"],
         "apelido": "plantinha",
         "data_plantio": '2025-12-24'

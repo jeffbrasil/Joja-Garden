@@ -38,7 +38,7 @@ def test_aidiconar_planta_no_jardim( client: TestClient, planta_usuario,get_usua
         json={"nome": "Meu Jardim"}
     )
 
-    resp_planta_usuario = client.post(f"/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar", headers=get_admin_header, json={
+    resp_planta_usuario = client.post(f'/planta/usuario/{get_usuario_header_com_id["id"]}/adicionar', headers=get_admin_header, json={
         "id": planta_catalogo["id"],
         "apelido": "plantinha",
         "data_plantio": '2025-12-24'
