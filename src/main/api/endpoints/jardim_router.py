@@ -9,6 +9,9 @@ from main.models.user import Usuario
 from main.schemas.jardim_schema import JardimCreate, JardimResponse
 from main.schemas.planta_movimentacao_schema import MoverPlanta
 from main.schemas.planta_catalogo_schema import PlantaUsuarioResponse
+
+from typing import List
+
 router = APIRouter()
 
 @router.post(
@@ -117,7 +120,7 @@ def mover_planta_de_jardim(
     return {"msg" : "Planta movida com sucesso"}
 
 @router.put("/{jardim_id}/renomear")
-def renomear_planta(
+def renomear_jardim(
     jardim_id : int,
     novo_nome : str,
     current_user = Depends(get_current_user),
@@ -146,6 +149,8 @@ def listar_jardim(
     session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    jardim = session.query(PlantaUsuario)
+    jardim = session.query(PlantaUsuario).filter(PlantaUsuario.jardim_id == jardim_id, PlantaUsuario.usuario_id == current_user.id).all()
+
+    return jardim
 
     

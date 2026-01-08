@@ -1,5 +1,27 @@
 from fastapi.testclient import TestClient
 from fastapi import status
+import pytest
+
+@pytest.fixture
+def cenario(client:TestClient, get_admin_header,get_usuario_header,planta_catalogo_payload, usuario_payload):
+    header = get_admin_header
+   
+    usuario_id = 2
+    planta = client.post("/catalogo/adicionar_planta_catalogo", headers = header, json = planta_catalogo_payload)
+    id_planta = planta.json()["id"]
+    
+    planta_usuario = {
+        "id" : id_planta
+    }
+    response = client.post(f"/planta/usuario/{usuario_id}/adicionar", headers = header, json = planta_usuario)
+    planta_usuario_id = response.json()["id"]
+
+    return {
+        "headers" : get_usuario_header,
+        "planta_usuario_id" : planta_usuario_id,
+        "planta_id" : id_planta,
+        "planta_dados" : planta_catalogo_payload
+    }
 
 def test_usuario_cria_jardim_com_sucesso(client: TestClient, get_usuario_header):
     response = client.post(
@@ -48,5 +70,23 @@ To precisando de um GET pra buscar a planta do usuario pelo ID, ou que ao adicio
 
 #     assert response.status_code == 404
 
+
+class TestAdicionarPlantaAJardim:
+
+    def test_usuario_adiciona_planta_a_jardim_com_sucesso(self, client:TestClient, cenario):
+        #precisa criar um admin,usuario,adicionar uma planta ao catálogo, adicionar a planta ao usuário
+        #por fim o usuario adicionar esta planta ao jardim
+        #usuario cria um jardim
+
+        header_usuario = cenario["headers"]
+        jardim = client.post("/jardim/criar_jardim", headers=header_usuario, json={"nome": "Meu Jardim"})
+        jardim_id = jardim.json()["id"]
+        #usuario adiciona planta a jardim
+        planta_id = cenario["planta_usuario_id"]
+        dados_movimentacao = { "jardim_novo" : jardim_id}
+        response = client.put(f"/jardim/{planta_id}/mover-planta", headers = header_usuario, json = dados_movimentacao)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"msg" : "Planta movida com sucesso"}
 
 
