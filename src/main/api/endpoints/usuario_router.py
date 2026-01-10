@@ -23,7 +23,6 @@ from services.verificacoes import valida_cpf, valida_senha
 
 router = APIRouter()
 
-
 @router.post("/", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def create_usuario(
     usuario_in: UsuarioCreate,
@@ -60,7 +59,6 @@ def create_usuario(
     novo_usuario.tipo_usuario = "usuario"
     return novo_usuario
 
-
 @router.get("/dados", response_model=UsuarioResponse, status_code=status.HTTP_200_OK)
 def ler_usuario_cpf(
     cpf: str, current_admin=Depends(get_current_active_admin), session=Depends(get_db)
@@ -69,7 +67,6 @@ def ler_usuario_cpf(
     if not usuario:
         raise HTTPException(status_code=400, detail="Usuario não encontrado")
     return usuario
-
 
 @router.get(
     f"/dados-cadastrais", response_model=UsuarioResponse, status_code=status.HTTP_200_OK
@@ -84,7 +81,6 @@ def meus_dados(current_user=Depends(get_current_user)):
 
     # Se não for admin, retorna como usuário comum
     return current_user
-
 
 @router.get("/all", response_model=List[UsuarioResponse], status_code=status.HTTP_200_OK)
 def list_all_usuarios(
@@ -130,7 +126,6 @@ def alterar_senha(
 
     return {"msg": "A senha foi alterada com sucesso"}
 
-
 @router.put("/esqueceu-senha", status_code = status.HTTP_200_OK)
 def redefinir_senha( 
     senha : EsqueceuSenha,
@@ -157,7 +152,7 @@ def redefinir_senha(
 def delete_usuario(
     user_id: int,
     session: Session = Depends(get_db),
-    current_admin: Super_usuario = Depends(get_current_active_admin), # Garante que apenas Admin possa deletar
+    current_admin: Super_usuario = Depends(get_current_active_admin),
 ):
     """
     Deleta um usuário do banco de dados (exclusivo para Administradores).
@@ -166,22 +161,17 @@ def delete_usuario(
     usuario_a_deletar = session.query(Usuario).filter(Usuario.id == user_id).first()
 
     if not usuario_a_deletar:
-    # verifica se a senha nova é igual a atual
-    if verify_password(senha.nova_senha, current_user.hash_senha):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A nova senha deve ser diferente da atual",
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"Usuário com ID {user_id} não encontrado."
         )
 
-    if not valida_senha(senha.nova_senha):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Senha inválida"
-        )
-
-    current_user.hash_senha = get_password_hash(senha.nova_senha)
-
-    session.add(current_user)
+ 
+    nome_usuario_deletado = usuario_a_deletar.nome 
+    
+    session.delete(usuario_a_deletar)
     session.commit()
-
-    return {"msg": "A senha foi alterada com sucesso"}
-    # salva a senha no banco
+    
+    return {
+        "message": f"Usuário {nome_usuario_deletado} foi deletado."
+    }
