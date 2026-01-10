@@ -56,3 +56,40 @@ def ver_galeria(
     galeria = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id).first().galeria
 
     return galeria
+# ... (imports e outras rotas)
+
+@router.delete("/imagem/{imagem_id}", status_code=status.HTTP_200_OK)
+def deletar_imagem_planta(
+    imagem_id: int,
+    current_user = Depends(get_current_user), # O Usuário logado
+    session = Depends(get_db)
+):
+    
+    imagem_a_deletar = session.query(Imagem).filter(Imagem.id == imagem_id).first()
+    
+    if not imagem_a_deletar:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Imagem com ID {imagem_id} não encontrada."
+        )
+
+    planta_dona = (
+        session.query(PlantaUsuario)
+        .filter(PlantaUsuario.id == imagem_a_deletar.planta_id, PlantaUsuario.usuario_id == current_user.id)
+        .first()
+    )
+    
+    if not planta_dona:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="A imagem não existe ou não pertence a uma de suas plantas."
+        )
+        
+    titulo_imagem = imagem_a_deletar.titulo or "Sem Título"
+    
+    session.delete(imagem_a_deletar)
+    session.commit()
+    
+    return {
+        "message": f"A imagem {titulo_imagem} foi deletada com sucesso."
+    }

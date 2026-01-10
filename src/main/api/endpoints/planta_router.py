@@ -101,10 +101,6 @@ def deletar_minha_planta(
     current_user = Depends(get_current_user), 
     session = Depends(get_db)
 ):
-    """
-    Deleta uma planta do usuário logado pelo ID.
-    (Acesso apenas para o Usuário Logado e apenas para suas próprias plantas)
-    """
     
     planta_a_deletar = (
         session.query(PlantaUsuario)
@@ -112,7 +108,6 @@ def deletar_minha_planta(
         .first()
     )
 
-    # 2. Verifica se a planta existe e pertence ao usuário
     if not planta_a_deletar:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -128,6 +123,7 @@ def deletar_minha_planta(
     return {
         "message": f"A planta {apelido_planta} foi removida com sucesso de suas plantas."
     }
+
 
 
 

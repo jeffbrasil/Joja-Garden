@@ -70,6 +70,15 @@ def usuario_payload():
         "senha": "Senha_cliente1",
         "endereco" : "rua 1" 
 }
+@pytest.fixture
+def usuario_payload_2():
+    return {
+        "nome": "Clienteee",
+        "cpf": "34316041029",
+        "email": "clienteeee@email.com",
+        "senha": "Senha_clsdsiente1",
+        "endereco" : "rua2" 
+}
 
 @pytest.fixture
 def planta_catalogo_payload():
@@ -107,16 +116,6 @@ def get_usuario_header(client:TestClient, usuario_payload, get_admin_header):
     token = response.json()["access_token"]
     
     return  {"Authorization" : f"Bearer {token}"}
-
-
-
-
-
-
-
-
-
-
 
 @pytest.fixture
 def get_usuario_header_com_id(client:TestClient, usuario_payload, get_admin_header):
@@ -192,4 +191,12 @@ def jardim_criado(client, get_usuario_header_com_id):
 
     assert response.status_code == 201
     return response.json()
+@pytest.fixture
+def get_usuario_header_2(client:TestClient, usuario_payload_2, get_admin_header):
 
+    client.post("usuario", headers =get_admin_header, json = usuario_payload_2)
+    login = {"username" : usuario_payload_2["cpf"], "password" : usuario_payload_2["senha"]}
+    response = client.post("/auth/token", data = login)
+    token = response.json()["access_token"]
+    
+    return  {"Authorization" : f"Bearer {token}"}
