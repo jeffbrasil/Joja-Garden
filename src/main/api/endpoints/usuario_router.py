@@ -8,7 +8,7 @@ from main.schemas.usuario_schema import UsuarioCreate, UsuarioResponse
 from main.schemas.alterar_senha_schema import AlterarSenha
 from main.schemas.esqueceu_senha_schema import EsqueceuSenha
 from services.verificacoes import valida_cpf, valida_senha
-from typing import List
+from typing import Union, List
 
 router = APIRouter()
 
@@ -87,35 +87,39 @@ def list_all_usuarios(
     
     return usuarios
 
-@router.put("/alterar-senha", status_code = status.HTTP_200_OK)
-def alterar_senha_sabendo_antiga(
-    senha : AlterarSenha,
-    current_user = Depends(get_current_user),
-    session = Depends(get_db)
+@router.put("/alterar-senha", status_code=status.HTTP_200_OK)
+def alterar_senha(
+    senha: AlterarSenha, current_user=Depends(get_current_user), session=Depends(get_db)
 ):
-    #verifica a senha digitada correponde a atual
+    # verifica a senha digitada corresponde a atual
     if not verify_password(senha.senha_atual, current_user.hash_senha):
-        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail="A senha atual está incorreta")
-
-    #verifica se a senha nova é igual a atual
-    if verify_password(senha.nova_senha,current_user.hash_senha):
-        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "A nova senha deve ser diferente da atual")
-    
-    if not valida_senha(senha.nova_senha):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Senha inválida"
+            detail="A senha atual está incorreta",
         )
-    
+
+    # verifica se a senha nova é igual a atual
+    if verify_password(senha.nova_senha, current_user.hash_senha):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A nova senha deve ser diferente da atual",
+        )
+
+    if not valida_senha(senha.nova_senha):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Senha inválida"
+        )
+
     current_user.hash_senha = get_password_hash(senha.nova_senha)
-    
+
     session.add(current_user)
     session.commit()
 
-    return {"msg" : "A senha foi alterada com sucesso"}
+    return {"msg": "A senha foi alterada com sucesso"}
+
 
 @router.put("/esqueceu-senha", status_code = status.HTTP_200_OK)
-def alterar_senha(
+def redefinir_senha( 
     senha : EsqueceuSenha,
     current_user = Depends(get_current_user),
     session = Depends(get_db)
@@ -136,7 +140,6 @@ def alterar_senha(
     session.commit()
 
     return {"msg" : "A senha foi alterada com sucesso"}
-
 
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK)
 def delete_usuario(
