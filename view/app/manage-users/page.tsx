@@ -13,7 +13,11 @@ import {
   Hash,
   Trash2,
   ChevronRight,
-  Sprout,
+  X,
+  AlertTriangle,
+  Key,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { userService } from "@/services/userService";
 import { useAuth } from "@/context/AuthContext";
@@ -24,12 +28,18 @@ import { toast } from "sonner";
 export default function ManageUsersPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  
+  // Estados de busca
   const [cpfBusca, setCpfBusca] = useState("");
-  const [usuarioEncontrado, setUsuarioEncontrado] = useState<IUser | null>(
-    null,
-  );
+  const [usuarioEncontrado, setUsuarioEncontrado] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [erro, setErro] = useState("");
+
+  // Estados de deleção e Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Função auxiliar para máscara visual (enquanto digita)
   const formatarCpfVisual = (valor: string) => {
@@ -77,6 +87,41 @@ export default function ManageUsersPage() {
     }
   };
 
+  const handleOpenDeleteModal = () => {
+    if (!usuarioEncontrado) return;
+    setConfirmacaoSenha("");
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!usuarioEncontrado) return;
+
+    // Validação Visual da Senha (UX Guardrail)
+    if (!confirmacaoSenha) {
+      toast.warning("Digite sua senha de administrador para confirmar.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Chama o endpoint DELETE /usuario/{id}
+      await userService.deleteUser(usuarioEncontrado.id);
+      
+      toast.success(`Usuário ${usuarioEncontrado.nome} excluído com sucesso.`);
+      
+      // Limpa os estados após sucesso
+      setUsuarioEncontrado(null);
+      setCpfBusca("");
+      setIsDeleteModalOpen(false);
+      
+    } catch (error: any) {
+      console.error("Erro ao deletar:", error);
+      toast.error("Erro ao excluir usuário. Verifique se o usuário possui pendências.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-tertiary">
@@ -90,7 +135,7 @@ export default function ManageUsersPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 relative">
       {/* --- CABEÇALHO DARK (Identidade Visual do Catálogo) --- */}
       <div className="bg-primary pt-12 pb-24 px-6 md:px-12 shadow-lg">
         <div className="max-w-5xl mx-auto text-center md:text-left">
@@ -279,14 +324,8 @@ export default function ManageUsersPage() {
 
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      toast.info("Funcionalidade futura", {
-                        description:
-                          "A exclusão de usuários será implementada na próxima versão.",
-                        action: { label: "Entendi", onClick: () => {} },
-                      });
-                    }}
-                    className="w-full h-auto py-4 justify-start border-red-100 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl group"
+                    onClick={handleOpenDeleteModal}
+                    className="w-full h-auto py-4 justify-start border-red-100 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl group transition-all"
                   >
                     <span className="bg-red-100 p-2 rounded-lg mr-3 group-hover:bg-red-200 transition-colors">
                       <Trash2 className="w-5 h-5" />
@@ -304,6 +343,78 @@ export default function ManageUsersPage() {
           )}
         </div>
       </div>
+
+      {/* --- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (IGUAL ADMIN) --- */}
+      {isDeleteModalOpen && usuarioEncontrado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+             
+             {/* Header do Modal */}
+             <div className="bg-red-50 p-6 flex flex-col items-center text-center border-b border-red-100 relative">
+                <button 
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="absolute top-4 right-4 text-red-300 hover:text-red-500 transition-colors"
+                >
+                    <X className="w-6 h-6" />
+                </button>
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <h2 className="text-xl font-bold text-red-900">Excluir Usuário?</h2>
+                <p className="text-red-700/80 text-sm mt-2">
+                  Você está prestes a excluir a conta de <strong>{usuarioEncontrado.nome}</strong>. Isso apagará todos os jardins e plantas vinculados permanentemente.
+                </p>
+             </div>
+
+             {/* Corpo do Modal */}
+             <div className="p-6 space-y-5">
+                <div className="space-y-2">
+                   <label className="text-sm font-semibold text-tertiary ml-1 flex items-center gap-2">
+                      <Key className="w-3 h-3" /> Confirme com sua senha de Admin
+                   </label>
+                   <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Digite sua senha..."
+                        value={confirmacaoSenha}
+                        onChange={(e) => setConfirmacaoSenha(e.target.value)}
+                        className="w-full h-12 px-4 pr-12 rounded-xl border border-tertiary/20 bg-gray-50 focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all outline-none text-primary"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3.5 text-tertiary hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                   </div>
+                   <p className="text-xs text-tertiary/60 ml-1">
+                       Essa ação requer permissão elevada e confirmação de identidade.
+                   </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                   <Button 
+                     variant="outline" 
+                     className="flex-1 h-12 rounded-xl border-tertiary/20 hover:bg-gray-50"
+                     onClick={() => setIsDeleteModalOpen(false)}
+                     disabled={isDeleting}
+                   >
+                     Cancelar
+                   </Button>
+                   <Button 
+                     className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-200 font-semibold"
+                     onClick={handleConfirmDelete}
+                     disabled={isDeleting || !confirmacaoSenha}
+                   >
+                     {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar Exclusão"}
+                   </Button>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

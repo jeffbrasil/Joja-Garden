@@ -2,6 +2,12 @@ import api from "./api";
 import { IUser } from "../types";
 
 export const userService = {
+  deleteUser: async (userId: number) => {
+    // O endpoint baseado na imagem enviada: DELETE /usuario/{user_id}
+    const response = await api.delete(`/usuario/${userId}`);
+    return response.data;
+  },
+
   // Rota baseada na sua imagem: PUT /usuario/alterar-senha
   updatePassword: async (dados: {
     senha_atual: string;

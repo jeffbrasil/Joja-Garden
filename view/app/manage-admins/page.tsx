@@ -13,7 +13,11 @@ import {
   Trash2,
   Key,
   ChevronRight,
-  Fingerprint
+  Fingerprint,
+  AlertTriangle,
+  X,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { adminService } from "@/services/adminService";
 import { useAuth } from "@/context/AuthContext";
@@ -29,18 +33,22 @@ interface IAdmin {
 
 export default function ManageAdminsPage() {
   const router = useRouter();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth(); // Pegamos o user para evitar auto-delete
   
   const [idBusca, setIdBusca] = useState("");
   const [adminEncontrado, setAdminEncontrado] = useState<IAdmin | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [erro, setErro] = useState("");
 
-  // Função para formatar o CPF visualmente para exibição (000.000.000-00)
+  // --- ESTADOS DO MODAL DE EXCLUSÃO ---
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Função para formatar o CPF visualmente
   const formatarCpfDisplay = (cpf: string) => {
-    // Remove caracteres não numéricos para garantir
     const apenasNumeros = cpf.replace(/\D/g, "");
-    // Aplica a máscara
     return apenasNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
@@ -64,6 +72,50 @@ export default function ManageAdminsPage() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // --- LÓGICA DE ABRIR O MODAL ---
+  const handleOpenDeleteModal = () => {
+    if (!adminEncontrado) return;
+    
+    // Evita que o admin se delete (opcional, mas recomendado)
+    if (user?.id === adminEncontrado.id) {
+        toast.warning("Você não pode excluir sua própria conta por aqui.");
+        return;
+    }
+
+    setConfirmacaoSenha("");
+    setIsDeleteModalOpen(true);
+  };
+
+  // --- LÓGICA DE CONFIRMAR EXCLUSÃO ---
+  const handleConfirmDelete = async () => {
+    if (!adminEncontrado) return;
+
+    // Validação Visual da Senha (UX Guardrail)
+    if (!confirmacaoSenha) {
+      toast.warning("Digite sua senha para confirmar a operação.");
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      await adminService.deleteAdmin(adminEncontrado.id);
+      
+      toast.success(`Administrador ${adminEncontrado.nome} removido com sucesso.`);
+      
+      // Limpa a tela após excluir
+      setAdminEncontrado(null);
+      setIdBusca("");
+      setIsDeleteModalOpen(false);
+
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Erro ao remover administrador. Tente novamente.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -165,9 +217,9 @@ export default function ManageAdminsPage() {
                         {adminEncontrado.nome}
                       </h2>
                       <div className="flex items-center gap-2 mt-2 text-sm text-tertiary">
-                         <span className="bg-primary/5 text-primary/80 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider border border-primary/10">
+                          <span className="bg-primary/5 text-primary/80 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider border border-primary/10">
                            System Admin
-                         </span>
+                          </span>
                       </div>
                     </div>
                   </div>
@@ -240,21 +292,16 @@ export default function ManageAdminsPage() {
 
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      toast.info("Ação Bloqueada", {
-                         description: "Por segurança, a exclusão de Admins só pode ser feita via banco de dados no momento.",
-                         action: { label: "Entendi", onClick: () => {} }
-                      });
-                    }}
-                    className="w-full h-auto py-4 justify-start border-red-100 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl group"
+                    onClick={handleOpenDeleteModal}
+                    className="w-full h-auto py-4 justify-start border-red-100 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 rounded-xl group transition-all"
                   >
-                     <span className="bg-red-100 p-2 rounded-lg mr-3 group-hover:bg-red-200 transition-colors">
+                      <span className="bg-red-100 p-2 rounded-lg mr-3 group-hover:bg-red-200 transition-colors">
                         <Trash2 className="w-5 h-5" />
-                     </span>
-                     <span className="font-semibold text-left">
+                      </span>
+                      <span className="font-semibold text-left">
                         Remover Admin
                         <span className="block text-[10px] font-normal opacity-70">Desativar conta</span>
-                     </span>
+                      </span>
                   </Button>
                 </div>
 
@@ -263,6 +310,79 @@ export default function ManageAdminsPage() {
           )}
         </div>
       </div>
+
+      {/* --- MODAL DE CONFIRMAÇÃO --- */}
+      {isDeleteModalOpen && adminEncontrado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+             
+             {/* Header do Modal */}
+             <div className="bg-red-50 p-6 flex flex-col items-center text-center border-b border-red-100 relative">
+                <button 
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="absolute top-4 right-4 text-red-300 hover:text-red-500 transition-colors"
+                >
+                    <X className="w-6 h-6" />
+                </button>
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <h2 className="text-xl font-bold text-red-900">Remover Administrador?</h2>
+                <p className="text-red-700/80 text-sm mt-2">
+                  Você está prestes a excluir a conta de <strong>{adminEncontrado.nome}</strong> (ID: {adminEncontrado.id}). Essa ação é irreversível.
+                </p>
+             </div>
+
+             {/* Corpo do Modal */}
+             <div className="p-6 space-y-5">
+                <div className="space-y-2">
+                   <label className="text-sm font-semibold text-tertiary ml-1 flex items-center gap-2">
+                      <Key className="w-3 h-3" /> Confirme com sua senha
+                   </label>
+                   <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Digite sua senha atual de admin..."
+                        value={confirmacaoSenha}
+                        onChange={(e) => setConfirmacaoSenha(e.target.value)}
+                        className="w-full h-12 px-4 pr-12 rounded-xl border border-tertiary/20 bg-gray-50 focus:bg-white focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all outline-none text-primary"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3.5 text-tertiary hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                   </div>
+                   <p className="text-xs text-tertiary/60 ml-1">
+                       Essa verificação garante que é você mesmo quem está realizando essa ação crítica.
+                   </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                   <Button 
+                     variant="outline" 
+                     className="flex-1 h-12 rounded-xl border-tertiary/20 hover:bg-gray-50"
+                     onClick={() => setIsDeleteModalOpen(false)}
+                     disabled={isDeleting}
+                   >
+                     Cancelar
+                   </Button>
+                   <Button 
+                     className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-200 font-semibold"
+                     onClick={handleConfirmDelete}
+                     disabled={isDeleting || !confirmacaoSenha}
+                   >
+                     {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar e Excluir"}
+                   </Button>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
