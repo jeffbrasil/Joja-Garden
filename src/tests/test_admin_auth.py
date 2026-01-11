@@ -84,6 +84,24 @@ class TestCriarAdmin:
         assert (response is not None)
         assert (response["tipo_usuario"] == "admin")
 
+    def test_criar_admin_cpf_invalido(self, client: TestClient):
+        admin_invalido = admin_valido.copy()
+        admin_invalido["cpf"] = "12345678900" 
+        
+        response = client.post("admin/criar_conta", json=admin_invalido)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "CPF inválido" in response.json()["detail"]
+
+    def test_criar_admin_senha_invalida(self, client: TestClient):
+        admin_invalido = admin_valido.copy()
+        admin_invalido["senha"] = "senha123"
+        
+        response = client.post("admin/criar_conta", json=admin_invalido)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Senha inválida" in response.json()["detail"]
+
     class TestCadastroUSuario:
 
         """Suíte de teste para o cadastro de usuario"""
@@ -131,6 +149,7 @@ class TestCriarAdmin:
              response = client.post("usuario", json = usuario_valido, headers = header)
 
              assert(response.status_code == status.HTTP_400_BAD_REQUEST)
+
 
     class TestLoginAdmin:
 
@@ -201,4 +220,130 @@ class TestCriarAdmin:
             assert (response.status_code == status.HTTP_401_UNAUTHORIZED)
             assert ("incorreto" in response.json()["detail"])
 
+class TestTentaLerAdmin:
+    def test_ler_admin_existente(self, client: TestClient, get_admin_header):
             
+        #cria segundo admin para ser lido
+            admin_payload_2 = {
+                "nome": "admin_test_2",
+                "cpf": "528.453.100-05",
+                "senha": "Senha123"
+            }
+
+            response = client.post("admin/criar_conta", json = admin_payload_2)
+            assert response.status_code == status.HTTP_201_CREATED
+                    
+            response_2 = client.get(f"/admin/{response.json()['id']}", headers=get_admin_header)
+            
+            assert response_2.status_code == status.HTTP_200_OK
+            assert response_2.json()["id"] == response.json()['id']
+            assert response_2.json()["nome"] == admin_payload_2['nome']
+
+    def test_ler_admin_nao_encontrado(self, client: TestClient, get_admin_header):
+        admin_id_inexistente = 99999 
+            
+        response = client.get(f"/admin/{admin_id_inexistente}", headers=get_admin_header)
+            
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "Administrador não encontrado" in response.json()["detail"]
+
+class TestAlterarSenhaAdmin:
+
+    def test_alterar_senha_sucesso(self, client: TestClient, db_session: Session, get_admin_header):
+        admin_logado = db_session.query(Super_usuario).filter(Super_usuario.cpf == admin_valido['cpf']).first()
+        admin_id = admin_logado.id
+
+        dados_alteracao = {
+            "senha_atual": admin_valido["senha"],
+            "nova_senha": "NovaSenhaSegura123!", # Senha nova e válida
+        }
+        
+        response = client.put(f"/admin/{admin_id}/alterar-senha", headers=get_admin_header, json=dados_alteracao)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert "A senha foi alterada com sucesso" in response.json()["msg"]
+
+    def test_alterar_senha_atual_incorreta(self, client: TestClient, db_session: Session, get_admin_header):
+        admin_logado = db_session.query(Super_usuario).filter(Super_usuario.cpf == admin_valido['cpf']).first()
+        admin_id = admin_logado.id
+
+        dados_alteracao = {
+            "senha_atual": "SenhaErrada!", # Senha atual incorreta (MISSING)
+            "nova_senha": "NovaSenhaSegura123!",
+        }
+        
+        response = client.put(f"/admin/{admin_id}/alterar-senha", headers=get_admin_header, json=dados_alteracao)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "A senha atual está incorreta" in response.json()["detail"]
+
+    def test_alterar_senha_nova_igual_a_atual(self, client: TestClient, db_session: Session, get_admin_header):
+        admin_logado = db_session.query(Super_usuario).filter(Super_usuario.cpf == admin_valido['cpf']).first()
+        admin_id = admin_logado.id
+
+        dados_alteracao = {
+            "senha_atual": admin_valido["senha"],
+            "nova_senha": admin_valido["senha"], 
+        }
+        
+        response = client.put(f"/admin/{admin_id}/alterar-senha", headers=get_admin_header, json=dados_alteracao)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "A nova senha deve ser diferente da atual" in response.json()["detail"]
+
+    def test_alterar_senha_nova_senha_invalida(self, client: TestClient, db_session: Session, get_admin_header):
+        admin_logado = db_session.query(Super_usuario).filter(Super_usuario.cpf == admin_valido['cpf']).first()
+        admin_id = admin_logado.id
+
+        dados_alteracao = {
+            "senha_atual": admin_valido["senha"],
+            "nova_senha": "senhamuitocurta",
+        }
+        
+        response = client.put(f"/admin/{admin_id}/alterar-senha", headers=get_admin_header, json=dados_alteracao)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Senha inválida" in response.json()["detail"]
+
+class TestDeletarAdmin:
+    def test_deletar_admin_sucesso(self, client: TestClient, db_session: Session, get_admin_header):
+
+        #cria segundo admin para ser apagado
+        admin_payload_2 = {
+                "nome": "admin_test_2",
+                "cpf": "528.453.100-05",
+                "senha": "Senha123"
+        }
+
+        response = client.post("/admin/criar_conta", json = admin_payload_2)
+        assert response.status_code == status.HTTP_201_CREATED
+        admin_id_deletar = response.json()["id"]
+
+        #deleta usuario
+        response_2 = client.delete(f"/admin/{admin_id_deletar}", headers=get_admin_header)
+
+        assert response_2.status_code == status.HTTP_200_OK
+        assert f"Administrador {admin_payload_2['nome']} foi deletado por outro Administrador." in response_2.json()["message"]
+        
+        # Verifica se o admin foi realmente deletado
+        response_leitura = client.get(f"/admin/{admin_id_deletar}", headers=get_admin_header)
+        assert response_leitura.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_deletar_admin_nao_encontrado(self, client: TestClient, get_admin_header):
+    
+        admin_id_inexistente = 99999 
+
+        response = client.delete(f"/admin/{admin_id_inexistente}", headers=get_admin_header)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert f"Administrador com ID {admin_id_inexistente} não encontrado." in response.json()["detail"]
+
+    def test_admin_tentar_se_auto_deletar(self, client: TestClient, db_session: Session, get_admin_header):
+        
+        admin_logado = db_session.query(Super_usuario).filter(Super_usuario.cpf == admin_valido['cpf']).first()
+        admin_id_logado = admin_logado.id 
+
+        response = client.delete(f"/admin/{admin_id_logado}", headers=get_admin_header)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Não é permitido que um administrador se auto-delete." in response.json()["detail"]

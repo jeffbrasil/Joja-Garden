@@ -51,13 +51,14 @@ def create_admin(admin_in: AdminCreate, session=Depends(get_db)):
 
 
 @router.get("/{admin_id}", response_model=AdminResponse)
-def read_admin(admin_in: int, session=Depends(get_db)):
+def read_admin(admin_id: int, session=Depends(get_db)):
 
-    admin = session.query(Admin).filter(Admin.id == admin_in).first()
+    admin = session.query(Admin).filter(Admin.id == admin_id).first()
 
     if not admin:
         raise HTTPException(status_code=404, detail="Administrador não encontrado")
     return admin
+
 @router.put("/{admin_id}/alterar-senha", status_code = status.HTTP_200_OK)
 def alterar_senha(
     dados : AlterarSenha,
@@ -86,7 +87,7 @@ def alterar_senha(
 
     return {"msg" : "A senha foi alterada com sucesso."}
 
-@router.put("/admin/alterar-minha-senha", status_code=status.HTTP_200_OK)
+@router.put("/alterar-minha-senha", status_code=status.HTTP_200_OK)
 def admin_alterar_minha_senha(
     senha_in: EsqueceuSenha, 
     current_admin: Super_usuario = Depends(get_current_active_admin), 
@@ -111,7 +112,7 @@ def admin_alterar_minha_senha(
 from main.models.user import Super_usuario # Garanta que este modelo esteja importado
 
 
-@router.delete("/admin/{admin_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{admin_id}", status_code=status.HTTP_200_OK)
 def delete_admin(
     admin_id: int,
     session: Session = Depends(get_db),
