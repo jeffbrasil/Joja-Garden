@@ -87,7 +87,7 @@ def alterar_senha(
 
     return {"msg" : "A senha foi alterada com sucesso."}
 
-@router.put("/admin/alterar-minha-senha", status_code=status.HTTP_200_OK)
+@router.put("/alterar-minha-senha", status_code=status.HTTP_200_OK)
 def admin_alterar_minha_senha(
     senha_in: EsqueceuSenha, 
     current_admin: Super_usuario = Depends(get_current_active_admin), 
@@ -112,7 +112,7 @@ def admin_alterar_minha_senha(
 from main.models.user import Super_usuario # Garanta que este modelo esteja importado
 
 
-@router.delete("/admin/{admin_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{admin_id}", status_code=status.HTTP_200_OK)
 def delete_admin(
     admin_id: int,
     session: Session = Depends(get_db),
