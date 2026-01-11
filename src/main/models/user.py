@@ -43,7 +43,3 @@ class Usuario(Super_usuario):
 
     jardins = relationship("Jardim", back_populates="dono")
 
-
-# admin
-
-# usuario
