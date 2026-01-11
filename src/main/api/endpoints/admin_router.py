@@ -6,6 +6,7 @@ from main.core.security import get_password_hash, verify_password
 from main.models.user import Admin, Super_usuario
 from main.schemas.admin_schema import AdminCreate, AdminResponse
 from main.schemas.alterar_senha_schema import AlterarSenha
+from main.schemas.esqueceu_senha_schema import EsqueceuSenha
 from services.verificacoes import valida_cpf, valida_senha
 
 router = APIRouter()
@@ -84,3 +85,59 @@ def alterar_senha(
     session.commit()
 
     return {"msg" : "A senha foi alterada com sucesso."}
+
+@router.put("/admin/alterar-minha-senha", status_code=status.HTTP_200_OK)
+def admin_alterar_minha_senha(
+    senha_in: EsqueceuSenha, 
+    current_admin: Super_usuario = Depends(get_current_active_admin), 
+    session = Depends(get_db)
+):
+
+    if not valida_senha(senha_in.nova_senha):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Senha inválida"
+        )
+    
+    # 2. Altera a senha do Admin logado
+    current_admin.hash_senha = get_password_hash(senha_in.nova_senha)
+    
+    session.add(current_admin)
+    session.commit()
+
+    return {"msg": "Sua senha de Administrador foi alterada com sucesso."}
+
+# ... (imports no topo do arquivo)
+from main.models.user import Super_usuario # Garanta que este modelo esteja importado
+
+
+@router.delete("/admin/{admin_id}", status_code=status.HTTP_200_OK)
+def delete_admin(
+    admin_id: int,
+    session: Session = Depends(get_db),
+    current_admin: Super_usuario = Depends(get_current_active_admin), 
+):
+  
+    
+    admin_a_deletar = session.query(Super_usuario).filter(Super_usuario.id == admin_id).first()
+
+    if not admin_a_deletar:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"Administrador com ID {admin_id} não encontrado."
+        )
+    
+    if admin_a_deletar.id == current_admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Não é permitido que um administrador se auto-delete."
+        )
+
+    nome_admin_deletado = admin_a_deletar.nome or admin_a_deletar.email
+    
+    session.delete(admin_a_deletar)
+    session.commit()
+    
+    return {
+        "message": f"Administrador {nome_admin_deletado} foi deletado por outro Administrador."
+    }

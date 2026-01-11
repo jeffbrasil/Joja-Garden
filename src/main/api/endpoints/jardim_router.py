@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from main.schemas.jardim_schema import JardimCreate, JardimResponse
-
+from main.schemas.planta_movimentacao_schema import MoverPlanta
 router = APIRouter()
 
 @router.post(
@@ -86,3 +86,80 @@ def listar_meus_jardins(
     )
     
     return jardins_do_usuario
+
+
+@router.delete("/{jardim_id}")
+def remover_jardim(
+    jardim_id : int,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    #verifica se o jardim é do usuário
+
+    jardim = session.query(Jardim).filter(Jardim.id == jardim_id, Jardim.usuario_id == current_user.id).first()
+
+    if not jardim:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim não encontrado")
+    #verificar se o jardim está vazio
+
+    tem_planta = session.query(PlantaUsuario).filter(PlantaUsuario.jardim_id == jardim_id).first()
+    
+    if tem_planta:
+        raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail = "O jardim precisa estar sem plantas para ser excluido")
+
+    session.delete(jardim)
+    session.commit()
+
+    return {"msg" : "Jardim excluído com sucesso"}
+
+@router.put("/{planta_id}/mover-planta")
+def mover_planta_de_jardim(
+    planta_id : int,
+    dados_movimentacao : MoverPlanta,
+    
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+
+    
+    jardim_novo = session.query(Jardim).filter(Jardim.id == dados_movimentacao.jardim_novo, Jardim.usuario_id == current_user.id).first()
+    #verifica se o jardim de destino existe e percente ao usuário
+    if not jardim_novo:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim novo não encontrado")
+
+    planta = session.query(PlantaUsuario).filter(PlantaUsuario.id == planta_id, PlantaUsuario.usuario_id == current_user.id).first()
+
+    #verifica se a planta existe e pertence ao jardim indicado
+    if not planta:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Planta não pertence ao usuário ou não pertence ao jardim")
+    #movimenta a planta de jardim
+    planta.jardim_id = dados_movimentacao.jardim_novo
+    session.add(planta)
+    session.commit()
+    session.refresh(planta)
+    #commita as mudanças no banco
+    return {"msg" : "Planta movida com sucesso"}
+
+@router.put("/{jardim_id}/renomear")
+def renomear_jardim(
+    jardim_id : int,
+    novo_nome : str,
+    current_user = Depends(get_current_user),
+    session = Depends(get_db)
+):
+    
+    jardim = session.query(Jardim).filter(Jardim.id == jardim_id, Jardim.usuario_id == current_user.id).first()
+
+    if not jardim:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim não encontrado")
+    
+    if jardim.nome == novo_nome:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "Jardim já possui este nome")    
+    
+    jardim.nome = novo_nome
+    
+    session.add(jardim)
+    session.commit()
+    session.refresh(jardim)
+
+    return {"msg" : "Nome do jardim alterado com sucesso."}
