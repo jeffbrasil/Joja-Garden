@@ -7,6 +7,27 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const TOKEN_KEY = "joja_token";
 
 export const authService = {
+  getEmailByCpf: async (cpf: string) => {
+    const response = await api.get("/usuario/email", {
+      params: {
+        cpf: cpf,
+      },
+    });
+
+    // A URL final que o axios vai montar será:
+    // http://.../usuario/email?cpf=12345678900
+
+    return response.data;
+  },
+
+  // 2. Redefine a senha
+  resetPassword: async (novaSenha: string) => {
+    const response = await api.put("/usuario/esqueceu-senha", {
+      nova_senha: novaSenha,
+    });
+    return response.data;
+  },
+
   login: async (cpf: string, password: string) => {
     const params = new URLSearchParams();
     params.append("username", cpf);
@@ -45,5 +66,5 @@ export const authService = {
       // 3. Força o reload para zerar qualquer estado React (Zustand/Context)
       window.location.href = "/login";
     }
-  }
+  },
 };

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
-  ChevronRight,
   Leaf,
   Menu,
   Home,
@@ -14,9 +13,9 @@ import {
   UserPlus,
   ShieldCheck,
   Users,
-  Flower2, // Usaremos este ícone para "Minhas Plantas"
+  Flower2,
   LogOut,
-  ChevronDown,
+  ChevronRight,
   User,
 } from "lucide-react";
 
@@ -28,17 +27,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isPlantsOpen, setIsPlantsOpen] = React.useState(false);
 
   const { user, logout, isAdmin } = useAuth();
   const router = useRouter();
@@ -52,18 +45,38 @@ export default function Navbar() {
 
   const closeMenu = () => setIsOpen(false);
 
-  // 1. Atualizei a lista de links para incluir "Minhas Plantas"
-  // A ordem sugerida: Home -> Minhas Plantas (O Principal) -> Jardins (A Organização) -> Catálogo (O Mundo)
+  // Lógica dos links do Desktop (Topo)
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Minhas Plantas", href: "/my-plants" }, // Nova Rota
-    { name: "Jardins", href: "/my-gardens" },
+    ...(!isAdmin
+      ? [
+          { name: "Minhas Plantas", href: "/my-plants" },
+          { name: "Jardins", href: "/my-gardens" },
+        ]
+      : []),
     { name: "Catálogo", href: "/catalog" },
   ];
 
+  // Helper para gerar as classes de estilo ativo/inativo consistentemente
+  const getLinkClasses = (path: string, isAdminLink = false) => {
+    const isActive = pathname === path;
+    const baseClasses = "w-full justify-start gap-3 font-normal transition-all";
+    
+    // Estilo quando está ATIVO (selecionado)
+    const activeClasses = "bg-primary/10 text-primary font-semibold";
+    
+    // Estilo quando INATIVO
+    // Links de admin costumam ser cinza (text-gray-600) para diferenciar, links normais são primary
+    const inactiveClasses = isAdminLink 
+        ? "text-gray-600 hover:text-primary hover:bg-gray-50" 
+        : "text-primary hover:text-secondary hover:bg-primary/5";
+
+    return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+  };
+
   return (
     <nav className="fixed top-0 left-0 w-full h-16 bg-quaternary/95 backdrop-blur-sm shadow-sm shadow-tertiary/20 z-50 px-6 md:px-12 flex items-center justify-between font-poppins transition-all">
-      {/* --- LOGO (Esquerda) --- */}
+      {/* --- LOGO --- */}
       <Link
         href="/"
         className="flex items-center gap-2 group cursor-pointer"
@@ -77,11 +90,10 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* --- LINKS DESKTOP (Centro) --- */}
+      {/* --- LINKS DESKTOP --- */}
       <div className="hidden md:flex items-center gap-4">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
-
           return (
             <Link
               key={link.href}
@@ -90,8 +102,8 @@ export default function Navbar() {
                 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300
                 ${
                   isActive
-                    ? "bg-primary text-white shadow-md shadow-tertiary/40 transform scale-105" // SELECIONADO
-                    : "text-primary hover:bg-primary/10 hover:text-primary hover:scale-105" // NÃO SELECIONADO
+                    ? "bg-primary text-white shadow-md shadow-tertiary/40 transform scale-105"
+                    : "text-primary hover:bg-primary/10 hover:text-primary hover:scale-105"
                 }
               `}
             >
@@ -101,7 +113,7 @@ export default function Navbar() {
         })}
       </div>
 
-      {/* --- MENU HAMBÚRGUER (Direita) --- */}
+      {/* --- MENU HAMBÚRGUER --- */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
@@ -126,6 +138,7 @@ export default function Navbar() {
           {/* Área de Scroll */}
           <ScrollArea className="h-[calc(100vh-80px)]">
             <div className="flex flex-col gap-6 p-6">
+              
               {/* 1. NAVEGAÇÃO BÁSICA */}
               <div className="space-y-3">
                 <p className="text-xs font-semibold text-tertiary uppercase tracking-wider">
@@ -133,38 +146,29 @@ export default function Navbar() {
                 </p>
 
                 <Link href="/" onClick={closeMenu}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 font-normal ${pathname === "/" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
-                  >
+                  <Button variant="ghost" className={getLinkClasses("/")}>
                     <Home size={18} /> Home
                   </Button>
                 </Link>
 
-                {/* --- NOVO ITEM: MINHAS PLANTAS --- */}
-                <Link href="/my-plants" onClick={closeMenu}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 font-normal ${pathname === "/view/app/plants" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
-                  >
-                    <Flower2 size={18} /> Minhas Plantas
-                  </Button>
-                </Link>
+                {!isAdmin && (
+                  <>
+                    <Link href="/my-plants" onClick={closeMenu}>
+                      <Button variant="ghost" className={getLinkClasses("/my-plants")}>
+                        <Flower2 size={18} /> Minhas Plantas
+                      </Button>
+                    </Link>
 
-                <Link href="/my-gardens" onClick={closeMenu}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 font-normal ${pathname === "/my-gardens" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
-                  >
-                    <Sprout size={18} /> Meus Jardins
-                  </Button>
-                </Link>
+                    <Link href="/my-gardens" onClick={closeMenu}>
+                      <Button variant="ghost" className={getLinkClasses("/my-gardens")}>
+                        <Sprout size={18} /> Meus Jardins
+                      </Button>
+                    </Link>
+                  </>
+                )}
 
                 <Link href="/catalog" onClick={closeMenu}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-3 font-normal ${pathname === "/catalog" ? "bg-primary/10 text-primary font-semibold" : "text-primary hover:text-secondary"}`}
-                  >
+                  <Button variant="ghost" className={getLinkClasses("/catalog")}>
                     <BookOpen size={18} /> Catálogo
                   </Button>
                 </Link>
@@ -172,7 +176,7 @@ export default function Navbar() {
 
               <Separator className="bg-tertiary/10" />
 
-              {/* 2. ÁREA DO ADMINISTRADOR */}
+              {/* 2. ÁREA DO ADMINISTRADOR (CORRIGIDO) */}
               {isAdmin && (
                 <>
                   <div className="space-y-3">
@@ -186,90 +190,33 @@ export default function Navbar() {
                     </div>
 
                     <Link href="/sign-up-user" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                      <Button variant="ghost" className={getLinkClasses("/sign-up-user", true)}>
                         <UserPlus size={18} /> Novo Usuário
                       </Button>
                     </Link>
 
                     <Link href="/sign-up-admin" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                      <Button variant="ghost" className={getLinkClasses("/sign-up-admin", true)}>
                         <ShieldCheck size={18} /> Novo Admin
                       </Button>
                     </Link>
 
                     <Link href="/manage-users" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                      <Button variant="ghost" className={getLinkClasses("/manage-users", true)}>
                         <Users size={18} /> Gerenciar Usuários
                       </Button>
                     </Link>
 
                     <Link href="/manage-admins" onClick={closeMenu}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-gray-600 hover:text-primary font-normal"
-                      >
+                      <Button variant="ghost" className={getLinkClasses("/manage-admins", true)}>
                         <ShieldCheck size={18} /> Gerenciar Admins
                       </Button>
                     </Link>
-
-                    <Collapsible
-                      open={isPlantsOpen}
-                      onOpenChange={setIsPlantsOpen}
-                      className="space-y-1"
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-between text-gray-600 hover:text-primary font-normal"
-                        >
-                          <span className="flex items-center gap-3">
-                            <Flower2 size={18} /> Adicionar Plantas
-                          </span>
-                          <ChevronDown
-                            size={16}
-                            className={`transition-transform duration-200 ${isPlantsOpen ? "rotate-180" : ""}`}
-                          />
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pl-4 space-y-1">
-                        <Link
-                          href="/catalogo/adicionar_planta_catalogo"
-                          onClick={closeMenu}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-gray-500 hover:text-secondary font-light pl-9"
-                          >
-                            • Ao Catálogo Geral
-                          </Button>
-                        </Link>
-                        <Link href="/admin/atribuir-planta" onClick={closeMenu}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-gray-500 hover:text-secondary font-light pl-9"
-                          >
-                            • A um Usuário
-                          </Button>
-                        </Link>
-                      </CollapsibleContent>
-                    </Collapsible>
                   </div>
                   <Separator className="bg-tertiary/10" />
                 </>
               )}
 
-              {/* 3. CONTA / LOGOUT */}
               {/* 3. CONTA / LOGOUT */}
               <div className="space-y-4">
                 <p className="text-xs font-semibold text-tertiary uppercase tracking-wider">
@@ -277,14 +224,13 @@ export default function Navbar() {
                 </p>
                 {user ? (
                   <div className="space-y-3">
-                    {/* CARD DO USUÁRIO AGORA É UM LINK */}
                     <Link
                       href="/account-details"
                       onClick={closeMenu}
                       className="group block"
                     >
-                      <div className="flex items-center gap-3 p-3 bg-quaternary/50 rounded-xl border border-tertiary/5 group-hover:bg-primary/5 group-hover:border-primary/20 transition-all cursor-pointer">
-                        <div className="bg-primary/10 p-2.5 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                      <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${pathname === "/account-details" ? "bg-primary/10 border-primary/20" : "bg-quaternary/50 border-tertiary/5 hover:bg-primary/5 hover:border-primary/20"}`}>
+                        <div className={`p-2.5 rounded-full transition-colors ${pathname === "/account-details" ? "bg-primary text-white" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white"}`}>
                           <User size={20} />
                         </div>
                         <div className="flex-1 overflow-hidden">

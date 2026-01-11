@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     try {
       const token = localStorage.getItem("joja_token");
-      
+
       if (!token) {
         setLoading(false);
         return;
@@ -48,17 +48,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Se já tiver header configurado, ótimo. Se não, garante aqui.
       if (!api.defaults.headers.common["Authorization"]) {
-         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
 
       console.log("AuthContext: Buscando dados do usuário...");
       const userData = await userService.getMe();
-      
+
       setUser(userData);
     } catch (error) {
       console.error("AuthContext: Erro ao buscar usuário", error);
       // Opcional: Só desloga se for erro 401. Se for erro de rede, mantém o usuário na dúvida.
-      logout(); 
+      logout();
     } finally {
       setLoading(false);
     }
@@ -69,10 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Isso resolve o bug de sair do Login -> Home e tomar redirect.
   useEffect(() => {
     const token = localStorage.getItem("joja_token");
-    
+
     if (!user && token) {
       // Se tem token mas não tem usuário (ex: acabou de logar), ativa loading e busca
-      setLoading(true); 
+      setLoading(true);
       refreshUser();
     } else if (!token && !user) {
       // Se não tem token nem user, para de carregar
@@ -87,10 +87,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 3. Proteção de rotas
   useEffect(() => {
-    const isPublicRoute = pathname === "/login" || pathname === "/sign-up-user";
+    // Adicione a rota "/login/forgot-password" aqui na verificação
+    const isPublicRoute =
+      pathname === "/login" ||
+      pathname === "/sign-up-user" ||
+      pathname === "/login/forgot-password"; // <--- AQUI ESTÁ A CORREÇÃO
 
     // Adicionei !token na verificação para evitar redirect falso positivo
-    const token = typeof window !== 'undefined' ? localStorage.getItem("joja_token") : null;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("joja_token") : null;
 
     if (!loading && !user && !isPublicRoute && !token) {
       console.log("Rota protegida detectada sem usuário. Redirecionando...");
