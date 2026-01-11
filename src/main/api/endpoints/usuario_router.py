@@ -96,16 +96,13 @@ def list_all_usuarios(
     
     return usuarios
 
-@router.post("/email", status_code=status.HTTP_200_OK) # Agora é um POST para /email
-def buscar_email_por_cpf(
-    dados_in: CPFBuscador, # Recebe o schema no corpo (body)
+# No seu arquivo de rotas (usuario_router.py)
+
+@router.get("/email", status_code=status.HTTP_200_OK)
+def buscar_email_por_cpf_get(
+    cpf: str, # Recebido como Query Parameter: /usuario/email?cpf=12345678901
     session: Session = Depends(get_db)
 ):
-    """
-    Busca e retorna o email de um usuário a partir do CPF (enviado no corpo da requisição).
-    (Não requer autenticação - uso em "Esqueci a Senha")
-    """
-    cpf = dados_in.cpf # Extrai o CPF do corpo da requisição
     
     # 1. Validação do CPF
     if not valida_cpf(cpf):
@@ -114,7 +111,6 @@ def buscar_email_por_cpf(
             detail="Formato de CPF inválido."
         )
 
-    # 2. Busca o usuário
     usuario = session.query(Usuario).filter(Usuario.cpf == cpf).first()
 
     if not usuario:
@@ -123,7 +119,6 @@ def buscar_email_por_cpf(
             detail="Usuário não encontrado."
         )
 
-    # 3. Retorna o email
     return {"email": usuario.email}
 
 @router.put("/alterar-senha", status_code=status.HTTP_200_OK)
