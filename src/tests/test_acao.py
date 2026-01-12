@@ -55,8 +55,6 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
-# --- Testes para cobrir validações de REGISTRO (POST) ---
-
 def test_registrar_acao_planta_inexistente(client: TestClient, get_usuario_header_com_id):
 
     header = {"Authorization": get_usuario_header_com_id["Authorization"]}
@@ -77,7 +75,7 @@ def test_registrar_acao_planta_outro_usuario(client: TestClient, planta_usuario,
 
         payload = {"tipo": "poda", "descricao": "nada", "data_hora": "2025-12-24"}
         
-        response = client.post(f'/acao/{planta_usuario['id']}/registrar', headers=get_usuario_header_2, json=payload)
+        response = client.post(f"/acao/{planta_usuario['id']}/registrar", headers=get_usuario_header_2, json=payload)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response.json()['detail'] == "Planta não pertence a este usuário"
