@@ -81,12 +81,9 @@ export default function SignUpAdmin() {
     setLoading(true);
 
     try {
-      // Remove pontuação do CPF para enviar
-      const cpfLimpo = formData.cpf.replace(/\D/g, "");
-
       const payload = {
         nome: formData.nome,
-        cpf: cpfLimpo,
+        cpf: formData.cpf,
         senha: formData.senha
       };
 
@@ -98,7 +95,7 @@ export default function SignUpAdmin() {
         title: "Administrador Criado",
         description: `O acesso para ${formData.nome} foi configurado com sucesso.`,
         variant: "success",
-        onConfirm: () => router.push("/admin/lista-usuarios")
+        onConfirm: () => router.push("/manage-admins")
       });
 
     } catch (err: any) {

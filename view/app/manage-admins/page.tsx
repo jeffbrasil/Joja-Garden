@@ -6,7 +6,16 @@ import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { AlertModal } from "@/components/modals/alert-modal"; // Importando o componente correto
+// Removi o AlertModal e importei os componentes primitivos do AlertDialog
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import {
   Search,
   ShieldCheck,
@@ -98,7 +107,7 @@ export default function ManageAdminsPage() {
     setIsDeleting(true);
 
     try {
-      await adminService.deleteAdmin(adminEncontrado.id);
+      await adminService.deleteAdmin(adminEncontrado.id); 
       
       toast.success("Administrador removido", {
         description: `A conta de ${adminEncontrado.nome} foi excluída com sucesso.`
@@ -111,7 +120,7 @@ export default function ManageAdminsPage() {
     } catch (error: any) {
       console.error(error);
       toast.error("Falha na exclusão", {
-        description: "Verifique sua senha ou tente novamente mais tarde."
+        description: "Verifique se a senha está correta ou tente novamente."
       });
     } finally {
       setIsDeleting(false);
@@ -294,43 +303,59 @@ export default function ManageAdminsPage() {
         </div>
       </div>
 
-      {/* --- ALERT MODAL (Reutilizável) --- */}
-      {adminEncontrado && (
-        <AlertModal 
-          isOpen={isDeleteModalOpen} 
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={handleConfirmDelete}
-          loading={isDeleting}
-          title="Remover Administrador?"
-          description={`Você tem certeza que deseja remover ${adminEncontrado.nome} (ID: ${adminEncontrado.id})? Essa ação não pode ser desfeita.`}
-        >
-          {/* Conteúdo Injetado no Modal (Input de Senha) */}
-          <div className="mt-4 pt-4 border-t border-gray-100 w-full space-y-3 text-left">
-             <label className="text-xs font-bold text-[#253528]/70 uppercase ml-1">Confirme com sua senha</label>
-             <div className="relative group">
-                <Key className="absolute left-4 top-3.5 h-5 w-5 text-[#8BA889] group-focus-within:text-[#49654E] transition-colors" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Sua senha de admin..."
-                  value={confirmacaoSenha}
-                  onChange={(e) => setConfirmacaoSenha(e.target.value)}
-                  className="w-full h-12 pl-12 pr-12 rounded-xl border border-[#8BA889]/30 bg-[#F9FBF9] focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[#253528]"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 text-[#8BA889] hover:text-[#49654E] transition-colors"
+      {/* --- ALERT DIALOG (SUBSTITUINDO O ALERTMODAL) --- */}
+      <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <AlertDialogContent className="bg-white rounded-2xl border-none shadow-2xl max-w-md">
+            <AlertDialogHeader>
+                <div className="flex items-center gap-3 text-red-600 mb-2">
+                    <div className="bg-red-100 p-2 rounded-full">
+                        <ShieldAlert className="w-6 h-6" />
+                    </div>
+                    <AlertDialogTitle className="text-xl">Remover Administrador?</AlertDialogTitle>
+                </div>
+                <AlertDialogDescription className="text-gray-600">
+                    Você tem certeza que deseja remover <strong>{adminEncontrado?.nome}</strong> (ID: {adminEncontrado?.id})? <br/>
+                    Essa ação é irreversível.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            {/* Input de Senha Injetado Diretamente */}
+            <div className="py-4 w-full space-y-3 text-left">
+                <label className="text-xs font-bold text-[#253528]/70 uppercase ml-1">Confirme com sua senha</label>
+                <div className="relative group">
+                   <Key className="absolute left-4 top-3.5 h-5 w-5 text-[#8BA889] group-focus-within:text-[#49654E] transition-colors" />
+                   <input
+                     type={showPassword ? "text" : "password"}
+                     placeholder="Sua senha de admin..."
+                     value={confirmacaoSenha}
+                     onChange={(e) => setConfirmacaoSenha(e.target.value)}
+                     className="w-full h-12 pl-12 pr-12 rounded-xl border border-[#8BA889]/30 bg-[#F9FBF9] focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[#253528]"
+                     autoFocus
+                   />
+                   <button
+                     type="button"
+                     onClick={() => setShowPassword(!showPassword)}
+                     className="absolute right-3 top-3.5 text-[#8BA889] hover:text-[#49654E] transition-colors"
+                   >
+                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                   </button>
+                </div>
+            </div>
+
+            <AlertDialogFooter className="gap-3">
+                <AlertDialogCancel className="rounded-xl border-gray-200 h-11">Cancelar</AlertDialogCancel>
+                {/* Usamos Button normal em vez de AlertDialogAction para evitar que o modal feche se a senha estiver vazia */}
+                <Button 
+                    onClick={handleConfirmDelete} 
+                    disabled={isDeleting}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 px-6 shadow-lg shadow-red-200"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-             </div>
-             <p className="text-[10px] text-red-400 ml-1">
-                * Obrigatório para operações críticas
-             </p>
-          </div>
-        </AlertModal>
-      )}
+                    {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Trash2 className="w-4 h-4 mr-2"/>}
+                    Confirmar Exclusão
+                </Button>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
