@@ -106,3 +106,50 @@ def testa_adiciona_imagem_a_usuario_que_nao_existe(client:TestClient, planta_usu
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() ==  {'detail': 'Usuario não encontrado'}
+
+
+
+def test_deletar_imagem_sucesso(client: TestClient, get_usuario_header_com_id, planta_usuario):
+
+    imagem = {
+          "url": "strin.jwp",
+          "titulo": "planta bunita",
+          "descricao": "plantinha"   
+        }
+    
+    response = client.post(f"/imagem/{planta_usuario['id']}/adicionar", headers={"Authorization": get_usuario_header_com_id["Authorization"]}, json = imagem)
+    assert response.status_code == status.HTTP_201_CREATED
+    
+    response_2 = client.delete(f"/imagem/{response.json()['id']}", headers={"Authorization": get_usuario_header_com_id["Authorization"]})
+
+    assert response_2.status_code == status.HTTP_200_OK
+    assert "A imagem planta bunita foi deletada com sucesso." in response_2.json()["message"]
+    
+def test_deletar_imagem_inexistente(client: TestClient, get_usuario_header_com_id):
+
+    header = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    imagem_id_fake = 99999
+    
+    response = client.delete(f"/imagem/{imagem_id_fake}", headers=header)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert f"Imagem com ID {imagem_id_fake} não encontrada." in response.json()["detail"]
+
+
+def test_deletar_imagem_de_outro_usuario(client: TestClient, get_usuario_header_com_id, planta_usuario, get_usuario_header_2):
+
+    header_usuario_a = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    header_usuario_b = get_usuario_header_2 
+    planta_id_usuario_a = planta_usuario["id"]
+    
+    imagem = {
+          "url": "strin.jwp",
+          "titulo": "planta bunita",
+          "descricao": "plantinha"   
+        }
+    
+    response = client.post(f"/imagem/{planta_id_usuario_a}/adicionar", headers=header_usuario_a, json = imagem)
+    response = client.delete(f"/imagem/{response.json()['id']}", headers=header_usuario_b)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "A imagem não existe ou não pertence a uma de suas plantas."

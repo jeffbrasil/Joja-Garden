@@ -122,3 +122,62 @@ class TestVisualizarPlantaUsuario:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.json()['detail'] == 'Planta não encontrada'
 
+
+
+    # --- Testes para cobrir listar_minhas_plantas (GET /minhas-plantas) ---
+
+def test_listar_minhas_plantas_lista_vazia( client: TestClient, get_usuario_header_2):
+
+    header_usuario_b = get_usuario_header_2
+        
+    response = client.get("/planta/minhas-plantas", headers=header_usuario_b)
+
+    assert response.status_code == status.HTTP_200_OK
+      
+    assert response.json() == []
+
+
+
+def test_deletar_minha_planta_sucesso( client: TestClient, get_usuario_header_com_id, planta_usuario):
+
+    header_usuario_a = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    planta_id = planta_usuario["id"]
+    apelido_esperado = planta_usuario["apelido"]
+        
+    response = client.delete(f"/planta/{planta_id}", headers=header_usuario_a)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["message"] == f"A planta {apelido_esperado} foi removida com sucesso de suas plantas."
+
+       
+    response_check = client.get(f"/planta/{planta_id}", headers=header_usuario_a)
+    assert response_check.status_code == status.HTTP_400_BAD_REQUEST # A rota GET retorna 400 se não encontrar
+    assert response_check.json()['detail'] == 'Planta não encontrada'
+
+
+def test_deletar_planta_nao_encontrada_ou_de_outro_usuario( client: TestClient, get_usuario_header_com_id, planta_usuario, get_usuario_header_2):
+
+    header_usuario_a = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    header_usuario_b = get_usuario_header_2
+        
+        
+    planta_id_fake = 99999
+    response_fake = client.delete(f"/planta/{planta_id_fake}", headers=header_usuario_a)
+        
+    assert response_fake.status_code == status.HTTP_404_NOT_FOUND
+    assert response_fake.json()["detail"] == "Planta não encontrada ou não pertence a este usuário."
+        
+      
+    planta_id_do_a = planta_usuario["id"]
+        
+    response_outro_user = client.delete(f"/planta/{planta_id_do_a}", headers=header_usuario_b)
+        
+    assert response_outro_user.status_code == status.HTTP_404_NOT_FOUND
+    assert response_outro_user.json()["detail"] == "Planta não encontrada ou não pertence a este usuário."
+
+def test_tenta_listar_plantas_do_usuario(client:TestClient, get_usuario_header_com_id):
+    header_usuario_a = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    response = client.get("/planta/minhas-plantas", headers=header_usuario_a)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+

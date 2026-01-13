@@ -306,6 +306,7 @@ class TestAlterarSenhaAdmin:
         assert "Senha inválida" in response.json()["detail"]
 
 class TestDeletarAdmin:
+
     def test_deletar_admin_sucesso(self, client: TestClient, db_session: Session, get_admin_header):
 
         #cria segundo admin para ser apagado
@@ -347,3 +348,29 @@ class TestDeletarAdmin:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Não é permitido que um administrador se auto-delete." in response.json()["detail"]
+
+import pytest 
+from fastapi.testclient import TestClient
+from fastapi import status
+
+# --- Assumindo Fixtures existentes ---
+# get_admin_header: Token/Header do Admin ativo
+# O payload para esta rota é do tipo EsqueceuSenha, que só exige 'nova_senha'
+
+class TestAdminRedefinirSenhaCoverage:
+
+    def test_admin_alterar_minha_senha_nova_senha_invalida(self, client: TestClient, get_admin_header):
+
+        header_admin = get_admin_header        
+   
+        senha_invalida_payload = {
+            "nova_senha": "minha_senha" 
+        }
+        response = client.put(
+            "/admin/alterar-minha-senha",
+            headers=header_admin,
+            json=senha_invalida_payload
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()["detail"] == "Senha inválida"
+    

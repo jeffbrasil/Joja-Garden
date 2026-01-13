@@ -96,30 +96,32 @@ def list_all_usuarios(
     
     return usuarios
 
-# No seu arquivo de rotas (usuario_router.py)
+'''
+Rotas de /email e /esqueceu senha estão omitidas para não gerar perigo, possivelmente nao seram implementadas
+'''
 
-@router.get("/email", status_code=status.HTTP_200_OK)
-def buscar_email_por_cpf_get(
-    cpf: str, # Recebido como Query Parameter: /usuario/email?cpf=12345678901
-    session: Session = Depends(get_db)
-):
+# @router.get("/email", status_code=status.HTTP_200_OK)
+# def buscar_email_por_cpf_get(
+#     cpf: str, # Recebido como Query Parameter: /usuario/email?cpf=12345678901
+#     session: Session = Depends(get_db)
+# ):
     
-    # 1. Validação do CPF
-    if not valida_cpf(cpf):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Formato de CPF inválido."
-        )
+#     # 1. Validação do CPF
+#     if not valida_cpf(cpf):
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST, 
+#             detail="Formato de CPF inválido."
+#         )
 
-    usuario = session.query(Usuario).filter(Usuario.cpf == cpf).first()
+#     usuario = session.query(Usuario).filter(Usuario.cpf == cpf).first()
 
-    if not usuario:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Usuário não encontrado."
-        )
+#     if not usuario:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND, 
+#             detail="Usuário não encontrado."
+#         )
 
-    return {"email": usuario.email}
+#     return {"email": usuario.email}
 
 @router.put("/alterar-senha", status_code=status.HTTP_200_OK)
 def alterar_senha(
@@ -151,27 +153,27 @@ def alterar_senha(
 
     return {"msg": "A senha foi alterada com sucesso"}
 
-@router.put("/esqueceu-senha", status_code = status.HTTP_200_OK)
-def redefinir_senha( 
-    senha : EsqueceuSenha,
-    current_user = Depends(get_current_user),
-    session = Depends(get_db)
-):
-    if verify_password(senha.nova_senha,current_user.hash_senha):
-        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "A nova senha deve ser diferente da atual")
+# @router.put("/esqueceu-senha", status_code = status.HTTP_200_OK)
+# def redefinir_senha( 
+#     senha : EsqueceuSenha,
+#     current_user = Depends(get_current_user),
+#     session = Depends(get_db)
+# ):
+#     if verify_password(senha.nova_senha,current_user.hash_senha):
+#         raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail = "A nova senha deve ser diferente da atual")
     
-    if not valida_senha(senha.nova_senha):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Senha inválida"
-        )
+#     if not valida_senha(senha.nova_senha):
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="Senha inválida"
+#         )
     
-    current_user.hash_senha = get_password_hash(senha.nova_senha)
+#     current_user.hash_senha = get_password_hash(senha.nova_senha)
     
-    session.add(current_user)
-    session.commit()
+#     session.add(current_user)
+#     session.commit()
 
-    return {"msg" : "A senha foi alterada com sucesso"}
+#     return {"msg" : "A senha foi alterada com sucesso"}
 
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK)
 def delete_usuario(

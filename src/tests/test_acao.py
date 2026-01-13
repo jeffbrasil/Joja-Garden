@@ -50,3 +50,49 @@ def test_listar_historico(client:TestClient, get_usuario_header_com_id, planta_u
     assert res3.json()[0]['tipo'] == 'adubo'
 
     assert res3.json()[1]['data_hora'] < res3.json()[0]['data_hora']
+
+import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
+
+def test_registrar_acao_planta_inexistente(client: TestClient, get_usuario_header_com_id):
+
+    header = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    id_inexistente = 99999
+    
+    payload = {
+        "tipo": "rega", 
+        "descricao": "tentativa em planta fantasma", 
+        "data_hora": "2025-12-24"
+    }
+
+    response = client.post(f'/acao/{id_inexistente}/registrar', headers=header, json=payload)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()['detail'] == "Planta não encontrada"
+
+def test_registrar_acao_planta_outro_usuario(client: TestClient, planta_usuario, get_usuario_header_2):
+
+        payload = {"tipo": "poda", "descricao": "nada", "data_hora": "2025-12-24"}
+        
+        response = client.post(f"/acao/{planta_usuario['id']}/registrar", headers=get_usuario_header_2, json=payload)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json()['detail'] == "Planta não pertence a este usuário"
+
+def test_listar_historico_planta_inexistente(client: TestClient, get_usuario_header_com_id):
+
+    header = {"Authorization": get_usuario_header_com_id["Authorization"]}
+    id_inexistente = 88888
+
+    response = client.get(f'/acao/{id_inexistente}/acoes', headers=header)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()['detail'] == "Planta não encontrada"
+
+def test_listar_historico_planta_outro_usuario(client: TestClient, get_usuario_header_com_id, planta_usuario, get_usuario_header_2):
+
+        response = client.get(f'/acao/{planta_usuario["id"]}/acoes', headers=get_usuario_header_2)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json()['detail'] == "Planta não pertence a este usuário"

@@ -58,7 +58,7 @@ def ver_galeria(
     return galeria
 # ... (imports e outras rotas)
 
-@router.delete("/imagem/{imagem_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{imagem_id}", status_code=status.HTTP_200_OK)
 def deletar_imagem_planta(
     imagem_id: int,
     current_user = Depends(get_current_user), # O Usuário logado

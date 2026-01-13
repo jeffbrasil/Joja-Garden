@@ -56,10 +56,7 @@ def listar_minhas_plantas(
     current_user: Usuario = Depends(get_current_user), # Obtém o usuário logado
     session: Session = Depends(get_db)
 ):
-    """
-    Lista todas as plantas cadastradas que pertencem ao usuário autenticado.
-    (Acesso apenas para o Usuário Logado)
-    """
+
     
     plantas_do_usuario = (
         session.query(PlantaUsuario)
