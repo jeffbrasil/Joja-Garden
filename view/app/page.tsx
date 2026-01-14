@@ -16,7 +16,7 @@ import {
   Flower2,
   Droplets,
   Scissors, // Adicionado para o modal
-  X,        // Adicionado para o modal
+  X, // Adicionado para o modal
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -112,7 +112,7 @@ export default function HomePage() {
         setLoadingCatalog(true);
         const catalogData = await catalogoService.getAll();
         setCatalogPreview(
-          Array.isArray(catalogData) ? catalogData.slice(0, 8) : []
+          Array.isArray(catalogData) ? catalogData.slice(0, 8) : [],
         );
       } catch (error) {
         console.error("Erro ao carregar catálogo na home:", error);
@@ -232,7 +232,7 @@ export default function HomePage() {
               <span className="font-semibold">Meus Jardins</span>
             </Button>
           </Link>
-          <Link href="/catalogue" className="group">
+          <Link href="/catalog" className="group">
             <Button className="w-full h-auto py-4 bg-secondary hover:bg-secondary text-white shadow-lg shadow-secondary/30 border-none rounded-2xl flex flex-col items-center gap-2 transition-all hover:-translate-y-1 hover:scale-[1.02]">
               <div className="p-3 bg-quinquenary/80 rounded-full group-hover:text-white group-hover:bg-primary">
                 <Search className="w-6 h-6 text-primary group-hover:text-white" />
@@ -250,7 +250,7 @@ export default function HomePage() {
               Descubra
             </h2>
             <Link
-              href="/catalogue"
+              href="/catalog"
               className="text-sm font-medium text-tertiary hover:text-secondary flex items-center transition-colors"
             >
               Ver catálogo <ArrowRight className="w-4 h-4 ml-1" />
@@ -292,7 +292,7 @@ export default function HomePage() {
                                 (
                                   e.target as HTMLImageElement
                                 ).nextElementSibling?.classList.remove(
-                                  "hidden"
+                                  "hidden",
                                 );
                               }}
                             />
@@ -426,7 +426,8 @@ export default function HomePage() {
                         <div className="h-32 overflow-hidden relative bg-gray-100">
                           <img
                             src={
-                              plant.catalogo?.img_url || "/placeholder-plant.jpg"
+                              plant.catalogo?.img_url ||
+                              "/placeholder-plant.jpg"
                             }
                             alt={plant.apelido}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -461,7 +462,7 @@ export default function HomePage() {
             <EmptySection
               icon={<Sprout size={32} />}
               title="Sua coleção está vazia"
-              link="/catalogue"
+              link="/catalog"
               linkText="Adicionar planta"
             />
           )}
