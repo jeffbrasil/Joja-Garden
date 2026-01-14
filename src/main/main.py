@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = [
+    "https://joja-garden.vercel.app"
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
