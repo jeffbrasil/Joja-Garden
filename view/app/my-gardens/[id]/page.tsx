@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import axios from "axios"
 import { useParams, useRouter } from "next/navigation"
 import {
   ArrowLeft,
@@ -50,6 +49,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+
+import { api } from "@/services/api";
 
 // --- TIPOS ---
 interface PlantaResumo {
@@ -120,10 +121,10 @@ export default function GardenDetailsPage() {
       setLoading(true)
       
       const [gardensRes, plantsRes] = await Promise.all([
-        axios.get("http://localhost:8000/jardim/meus-jardins", {
+        api.get("/jardim/meus-jardins", {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get("http://localhost:8000/planta/minhas-plantas", {
+        api.get("/planta/minhas-plantas", {
           headers: { Authorization: `Bearer ${token}` }
         })
       ])
@@ -160,8 +161,8 @@ export default function GardenDetailsPage() {
 
     setIsSubmitting(true)
     try {
-      await axios.post(
-        `http://localhost:8000/jardim/${garden.id}/adicionar-planta/${selectedPlantIdToAdd}`,
+      await api.post(
+        `/jardim/${garden.id}/adicionar-planta/${selectedPlantIdToAdd}`,
         {}, 
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -195,8 +196,8 @@ export default function GardenDetailsPage() {
     setIsSubmitting(true)
     try {
       // Para mover, geralmente usamos a lógica de adicionar ao novo (o backend atualiza a FK)
-      await axios.post(
-        `http://localhost:8000/jardim/${targetGardenId}/adicionar-planta/${plantToMove.id}`,
+      await api.post(
+        `/jardim/${targetGardenId}/adicionar-planta/${plantToMove.id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )

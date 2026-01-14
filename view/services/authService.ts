@@ -1,5 +1,4 @@
-import axios from "axios";
-import api from "./api";
+import api from "@/services/api";
 
 // Define a URL base aqui para não repetir string mágica.
 // Idealmente vem do .env, mas tem o fallback para o localhost.
@@ -13,9 +12,6 @@ export const authService = {
         cpf: cpf,
       },
     });
-
-    // A URL final que o axios vai montar será:
-    // http://.../usuario/email?cpf=12345678900
 
     return response.data;
   },
@@ -33,7 +29,7 @@ export const authService = {
     params.append("username", cpf);
     params.append("password", password);
 
-    const response = await axios.post(`${BASE_URL}/auth/token`, params, {
+    const response = await api.post(`/auth/token`, params, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
@@ -60,7 +56,6 @@ export const authService = {
       // 1. Limpa o storage
       localStorage.removeItem("joja_token");
 
-      // 2. [CRUCIAL] Limpa o header da instância do Axios na memória
       delete api.defaults.headers.common["Authorization"];
 
       // 3. Força o reload para zerar qualquer estado React (Zustand/Context)

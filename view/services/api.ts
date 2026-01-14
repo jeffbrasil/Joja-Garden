@@ -5,7 +5,7 @@ export const TOKEN_KEY = "joja_token";
 
 const api = axios.create({
   // Usa variável de ambiente ou fallback
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseURL: "" || "http://localhost:8000",
   headers: {
     "Content-Type": "application/json",
   },

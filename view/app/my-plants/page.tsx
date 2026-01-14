@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+import { api } from "@/services/api";
 import { 
   LayoutGrid, 
   List as ListIcon, 
@@ -98,7 +98,7 @@ export default function MyPlantsPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("joja_token");
-      const response = await axios.get("http://localhost:8000/planta/minhas-plantas", {
+      const response = await api.get("/planta/minhas-plantas", {
           headers: { Authorization: `Bearer ${token}` } 
       });
       setPlants(response.data);
@@ -128,7 +128,7 @@ export default function MyPlantsPage() {
     const token = localStorage.getItem("joja_token");
 
     try {
-        await axios.delete(`http://localhost:8000/planta/${plantToDelete.id}`, {
+        await api.delete(`/planta/${plantToDelete.id}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
 

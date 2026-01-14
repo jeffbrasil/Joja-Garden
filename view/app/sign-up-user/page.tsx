@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { api } from "@/services/api";
 import {
   Sprout,
   Loader2,
@@ -107,7 +107,7 @@ export default function SignUpUser() {
         endereco: formData.endereco,
       };
 
-      await axios.post("http://localhost:8000/usuario/", payload, {
+      await api.post("/usuario/", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
