@@ -13,6 +13,11 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), ".."
 # access to the values within the .ini file in use.
 config = context.config
 
+config.set_main_option(
+    "sqlalchemy.url", 
+    "postgresql://postgres.sptsiurfpqrxcxeocaas:zHYuGHrqLj41dOEf@aws-0-us-west-2.pooler.supabase.com:6543/postgres"
+)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
@@ -34,7 +39,6 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
