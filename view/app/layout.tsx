@@ -4,6 +4,7 @@ import { Poppins } from "next/font/google";
 import Navbar from "../components/navbar";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const poppins = Poppins({
   subsets: ["latin"],

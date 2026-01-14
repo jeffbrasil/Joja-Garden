@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
 import {
   ArrowRight,
   Sprout,
@@ -31,6 +30,8 @@ import {
 
 import { userService } from "@/services/userService";
 import { catalogoService } from "@/services/catalogoService";
+
+import { api } from "@/services/api";
 
 // --- TIPAGEM ---
 interface CatalogoItem {
@@ -110,15 +111,14 @@ export default function HomePage() {
       try {
         setLoadingCatalog(true);
         const catalogData = await catalogoService.getAll();
-        
+
         // CORREÇÃO DO ERRO DE BUILD:
         // Usamos 'as unknown as CatalogoItem[]' para forçar a compatibilidade dos tipos
-        const formattedData = Array.isArray(catalogData) 
-          ? catalogData.slice(0, 8) 
+        const formattedData = Array.isArray(catalogData)
+          ? catalogData.slice(0, 8)
           : [];
-          
+
         setCatalogPreview(formattedData as unknown as CatalogoItem[]);
-        
       } catch (error) {
         console.error("Erro ao carregar catálogo na home:", error);
       } finally {
@@ -141,10 +141,10 @@ export default function HomePage() {
         try {
           setLoadingUserData(true);
           const [gardensRes, plantsRes] = await Promise.allSettled([
-            axios.get("http://localhost:8000/jardim/meus-jardins", {
+            api.get("/jardim/meus-jardins", {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            axios.get("http://localhost:8000/planta/minhas-plantas", {
+            api.get("/planta/minhas-plantas", {
               headers: { Authorization: `Bearer ${token}` },
             }),
           ]);
@@ -297,7 +297,7 @@ export default function HomePage() {
                                 (
                                   e.target as HTMLImageElement
                                 ).nextElementSibling?.classList.remove(
-                                  "hidden"
+                                  "hidden",
                                 );
                               }}
                             />
@@ -431,7 +431,8 @@ export default function HomePage() {
                         <div className="h-32 overflow-hidden relative bg-gray-100">
                           <img
                             src={
-                              plant.catalogo?.img_url || "/placeholder-plant.jpg"
+                              plant.catalogo?.img_url ||
+                              "/placeholder-plant.jpg"
                             }
                             alt={plant.apelido}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -467,7 +468,7 @@ export default function HomePage() {
               icon={<Sprout size={32} />}
               title="Sua coleção está vazia"
               link="/catalog"
-              linkText="Adicionar planta"
+              linkText="Explorar Catálogo"
             />
           )}
         </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import axios from "axios"
+import { api } from "@/services/api";
 import { useRouter } from "next/navigation"
 import {
   Plus,
@@ -100,7 +100,7 @@ export default function MyGardensPage() {
 
     try {
       setLoading(true)
-      const response = await axios.get("http://localhost:8000/jardim/meus-jardins", {
+      const response = await api.get("/jardim/meus-jardins", {
         headers: { Authorization: `Bearer ${token}` }
       })
       setGardens(response.data)
@@ -122,8 +122,8 @@ export default function MyGardensPage() {
     if (!token) return
 
     try {
-      await axios.post(
-        "http://localhost:8000/jardim/criar_jardim",
+      await api.post(
+        "/jardim/criar_jardim",
         { nome: newGardenName },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -150,8 +150,8 @@ export default function MyGardensPage() {
     if (!token) return
 
     try {
-      await axios.put(
-        `http://localhost:8000/jardim/${gardenToRename.id}/renomear`,
+      await api.put(
+        `/jardim/${gardenToRename.id}/renomear`,
         null,
         { 
             headers: { Authorization: `Bearer ${token}` },
@@ -183,7 +183,7 @@ export default function MyGardensPage() {
 
     setIsDeleting(true)
     try {
-      await axios.delete(`http://localhost:8000/jardim/${gardenToDelete.id}`, {
+      await api.delete(`/jardim/${gardenToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setIsDeleteModalOpen(false)
