@@ -3,9 +3,14 @@ import axios from "axios";
 // Constante para evitar erros de digitação
 export const TOKEN_KEY = "joja_token";
 
+<<<<<<< Updated upstream
 const api = axios.create({
   // Usa variável de ambiente ou fallback
   baseURL: "" || "http://localhost:8000",
+=======
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+>>>>>>> Stashed changes
   headers: {
     "Content-Type": "application/json",
   },
@@ -30,7 +35,7 @@ api.interceptors.request.use(
   // 2º Argumento: ERRO (Erro ao tentar montar a requisição)
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // =================================================================
@@ -43,7 +48,6 @@ api.interceptors.response.use(
   (error) => {
     // Verifica se erro existe e se é 401
     if (error.response?.status === 401) {
-      
       // LOG DE DEBUG (Para você descobrir o problema do loop)
       console.error("ERRO 401 DETECTADO NA URL:", error.config?.url);
 
