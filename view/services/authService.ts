@@ -1,8 +1,5 @@
 import api from "@/services/api";
 
-// Define a URL base aqui para não repetir string mágica.
-// Idealmente vem do .env, mas tem o fallback para o localhost.
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const TOKEN_KEY = "joja_token";
 
 export const authService = {
