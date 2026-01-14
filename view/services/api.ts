@@ -2,9 +2,14 @@ import axios from "axios";
 
 export const TOKEN_KEY = "joja_token";
 
+<<<<<<< Updated upstream
 const api = axios.create({
   // Usa variável de ambiente ou fallback
   baseURL: "" || "http://localhost:8000",
+=======
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+>>>>>>> Stashed changes
 =======
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
