@@ -17,7 +17,7 @@ export const adminService = {
   },
 
   updateAdminPassword: async (
-    id: string | number,
+    id: number,
     dados: { senha_atual: string; nova_senha: string },
   ) => {
     const response = await api.put(`/admin/${id}/alterar-senha`, dados);

@@ -459,7 +459,7 @@ function EmptyState() {
       <p className="text-tertiary max-w-md mb-8">
         Você ainda não adicionou nenhuma planta à sua coleção. Que tal explorar nosso catálogo e começar seu jardim hoje?
       </p>
-      <Link href="/catalogue">
+      <Link href="/catalog">
         <Button className="bg-secondary hover:bg-secondary/90 text-white px-8 py-6 rounded-xl text-lg shadow-lg shadow-secondary/30 transition-all hover:scale-105">
           Explorar Catálogo
         </Button>

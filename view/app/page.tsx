@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext"; // 1. Importando o contexto
 import {
   ArrowRight,
   Sprout,
@@ -28,9 +29,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-import { userService } from "@/services/userService";
 import { catalogoService } from "@/services/catalogoService";
-
 import { api } from "@/services/api";
 
 // --- TIPAGEM ---
@@ -60,13 +59,9 @@ interface MinhaPlanta {
   catalogo: CatalogoItem;
 }
 
-interface UserData {
-  nome: string;
-  email: string;
-}
-
 export default function HomePage() {
-  const [user, setUser] = useState<UserData | null>(null);
+  // 2. Usando o AuthContext em vez de estado local para o usuário
+  const { user, isAdmin } = useAuth();
 
   // Estados de Dados
   const [gardens, setGardens] = useState<Jardim[]>([]);
@@ -77,7 +72,6 @@ export default function HomePage() {
   const [selectedPlant, setSelectedPlant] = useState<CatalogoItem | null>(null);
 
   // Estados de Carregamento
-  const [loadingUser, setLoadingUser] = useState(true);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [loadingUserData, setLoadingUserData] = useState(true);
 
@@ -107,13 +101,11 @@ export default function HomePage() {
     const loadData = async () => {
       const token = localStorage.getItem("joja_token");
 
-      // 1. Carregar Catálogo
+      // 1. Carregar Catálogo (Sempre carrega para todos)
       try {
         setLoadingCatalog(true);
         const catalogData = await catalogoService.getAll();
 
-        // CORREÇÃO DO ERRO DE BUILD:
-        // Usamos 'as unknown as CatalogoItem[]' para forçar a compatibilidade dos tipos
         const formattedData = Array.isArray(catalogData)
           ? catalogData.slice(0, 8)
           : [];
@@ -125,19 +117,9 @@ export default function HomePage() {
         setLoadingCatalog(false);
       }
 
-      // 2. Carregar Dados do Usuário
-      if (token) {
-        try {
-          setLoadingUser(true);
-          const userData = await userService.getMe();
-          setUser(userData as any);
-        } catch (error) {
-          console.error("Erro ao carregar usuário:", error);
-        } finally {
-          setLoadingUser(false);
-        }
-
-        // 3. Carregar Jardins e Plantas
+      // 2. Carregar Jardins e Plantas (APENAS SE NÃO FOR ADMIN)
+      // Se for admin, não precisamos buscar esses dados, evitamos erro 403 ou processamento inútil
+      if (token && !isAdmin) {
         try {
           setLoadingUserData(true);
           const [gardensRes, plantsRes] = await Promise.allSettled([
@@ -161,13 +143,13 @@ export default function HomePage() {
           setLoadingUserData(false);
         }
       } else {
-        setLoadingUser(false);
+        // Se for admin ou sem token, para o loading
         setLoadingUserData(false);
       }
     };
 
     loadData();
-  }, []);
+  }, [isAdmin]); // Adicionada dependência do isAdmin
 
   return (
     <div className="min-h-screen bg-quinquenary pb-24 font-poppins overflow-x-hidden relative">
@@ -184,75 +166,89 @@ export default function HomePage() {
                 {greeting.text}
               </span>
             </div>
-            {loadingUser ? (
-              <Skeleton className="h-10 w-64 bg-white/20 rounded-lg" />
-            ) : (
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-                Olá, {user?.nome?.split(" ")[0] || "Jardineiro"}!
-              </h1>
-            )}
+            
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
+              {/* Usa o user do contexto ou "Visitante" */}
+              Olá, {user?.nome?.split(" ")[0] || "Visitante"}!
+            </h1>
+           
             <p className="text-white/80 text-lg font-light max-w-lg">
-              Vamos cuidar do seu pedacinho de natureza hoje?
+              {isAdmin 
+                ? "Painel administrativo do JojaGarden." 
+                : "Vamos cuidar do seu pedacinho de natureza hoje?"}
             </p>
           </div>
 
-          {/* Stats Card */}
-          <div className="flex gap-4">
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-white text-center min-w-[100px]">
-              <div className="text-3xl font-bold">{gardens.length}</div>
-              <div className="text-xs opacity-80 uppercase tracking-wider">
-                Jardins
+          {/* Stats Card - OCULTO PARA ADMIN */}
+          {!isAdmin && (
+            <div className="flex gap-4">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-white text-center min-w-[100px]">
+                <div className="text-3xl font-bold">{gardens.length}</div>
+                <div className="text-xs opacity-80 uppercase tracking-wider">
+                  Jardins
+                </div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-white text-center min-w-[100px]">
+                <div className="text-3xl font-bold">{plants.length}</div>
+                <div className="text-xs opacity-80 uppercase tracking-wider">
+                  Plantas
+                </div>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-white text-center min-w-[100px]">
-              <div className="text-3xl font-bold">{plants.length}</div>
-              <div className="text-xs opacity-80 uppercase tracking-wider">
-                Plantas
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* --- CONTEÚDO PRINCIPAL --- */}
       <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-20 space-y-10">
+        
         {/* 1. ATALHOS RÁPIDOS */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up"
+          // Ajusta o grid: Se admin, usa colunas menores ou centraliza o único botão
+          className={`grid grid-cols-1 ${isAdmin ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-3'} gap-4 animate-fade-in-up`}
           style={{ animationDelay: "100ms" }}
         >
-          <Link href="/my-plants" className="group">
-            <Button className="w-full h-auto py-4 bg-white hover:bg-white text-primary hover:text-secondary shadow-lg shadow-black/5 hover:shadow-xl border-none rounded-2xl flex flex-col items-center gap-2 transition-all hover:-translate-y-1">
-              <div className="p-3 bg-quinquenary/80 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors">
-                <Flower2 size={18} />
-              </div>
-              <span className="font-semibold">Minhas Plantas</span>
-            </Button>
-          </Link>
-          <Link href="/my-gardens" className="group">
-            <Button className="w-full h-auto py-4 bg-white hover:bg-white text-primary hover:text-secondary shadow-lg shadow-black/5 hover:shadow-xl border-none rounded-2xl flex flex-col items-center gap-2 transition-all hover:-translate-y-1">
-              <div className="p-3 bg-quinquenary/80 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors">
-                <Shovel className="w-6 h-6 text-primary group-hover:text-white" />
-              </div>
-              <span className="font-semibold">Meus Jardins</span>
-            </Button>
-          </Link>
+          {/* SEÇÕES DE USUÁRIO - SÓ RENDERIZA SE !isAdmin */}
+          {!isAdmin && (
+            <>
+              <Link href="/my-plants" className="group">
+                <Button className="w-full h-auto py-4 bg-white hover:bg-white text-primary hover:text-secondary shadow-lg shadow-black/5 hover:shadow-xl border-none rounded-2xl flex flex-col items-center gap-2 transition-all hover:-translate-y-1">
+                  <div className="p-3 bg-quinquenary/80 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors">
+                    <Flower2 size={18} />
+                  </div>
+                  <span className="font-semibold">Minhas Plantas</span>
+                </Button>
+              </Link>
+              <Link href="/my-gardens" className="group">
+                <Button className="w-full h-auto py-4 bg-white hover:bg-white text-primary hover:text-secondary shadow-lg shadow-black/5 hover:shadow-xl border-none rounded-2xl flex flex-col items-center gap-2 transition-all hover:-translate-y-1">
+                  <div className="p-3 bg-quinquenary/80 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors">
+                    <Shovel className="w-6 h-6 text-primary group-hover:text-white" />
+                  </div>
+                  <span className="font-semibold">Meus Jardins</span>
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {/* CATÁLOGO - DISPONÍVEL PARA TODOS */}
           <Link href="/catalog" className="group">
             <Button className="w-full h-auto py-4 bg-secondary hover:bg-secondary text-white shadow-lg shadow-secondary/30 border-none rounded-2xl flex flex-col items-center gap-2 transition-all hover:-translate-y-1 hover:scale-[1.02]">
               <div className="p-3 bg-quinquenary/80 rounded-full group-hover:text-white group-hover:bg-primary">
                 <Search className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
-              <span className="font-semibold">Explorar Catálogo</span>
+              <span className="font-semibold">
+                {isAdmin ? "Gerenciar Catálogo" : "Explorar Catálogo"}
+              </span>
             </Button>
           </Link>
         </div>
 
-        {/* 2. PRÉVIA DO CATÁLOGO (CARROSSEL) */}
+        {/* 2. PRÉVIA DO CATÁLOGO (CARROSSEL) - VISÍVEL PARA TODOS */}
         <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
           <div className="flex justify-between items-end mb-4 px-2">
             <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-primary fill-tertiary/20" />
-              Descubra
+              {isAdmin ? "Catálogo do Sistema" : "Descubra"}
             </h2>
             <Link
               href="/catalog"
@@ -330,151 +326,156 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 3. MEUS JARDINS (CARROSSEL) */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-          <div className="flex justify-between items-end mb-4 px-2">
-            <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
-              <Shovel className="w-6 h-6 text-secondary" />
-              Seus Jardins
-            </h2>
-            {gardens.length > 0 && (
-              <Link
-                href="/my-gardens"
-                className="text-sm font-medium text-tertiary hover:text-secondary flex items-center justify-center transition-colors"
-              >
-                Gerenciar <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
-            )}
-          </div>
+        {/* 3. E 4. SEÇÕES EXCLUSIVAS DE USUÁRIO (JARDINS E MINHAS PLANTAS) */}
+        {!isAdmin && (
+          <>
+            {/* 3. MEUS JARDINS (CARROSSEL) */}
+            <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+              <div className="flex justify-between items-end mb-4 px-2">
+                <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
+                  <Shovel className="w-6 h-6 text-secondary" />
+                  Seus Jardins
+                </h2>
+                {gardens.length > 0 && (
+                  <Link
+                    href="/my-gardens"
+                    className="text-sm font-medium text-tertiary hover:text-secondary flex items-center justify-center transition-colors"
+                  >
+                    Gerenciar <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                )}
+              </div>
 
-          {loadingUserData ? (
-            <div className="flex gap-4 overflow-hidden">
-              <Skeleton className="w-72 h-40 rounded-3xl flex-shrink-0" />
-              <Skeleton className="w-72 h-40 rounded-3xl flex-shrink-0" />
+              {loadingUserData ? (
+                <div className="flex gap-4 overflow-hidden">
+                  <Skeleton className="w-72 h-40 rounded-3xl flex-shrink-0" />
+                  <Skeleton className="w-72 h-40 rounded-3xl flex-shrink-0" />
+                </div>
+              ) : gardens.length > 0 ? (
+                <Carousel
+                  opts={{ align: "start" }}
+                  className="w-full relative group/carousel"
+                >
+                  <CarouselContent className="-ml-4 pb-4">
+                    {gardens.map((garden) => (
+                      <CarouselItem key={garden.id} className="pl-4 basis-auto">
+                        <Link href={`/my-gardens/${garden.id}`}>
+                          <div className="w-72 h-40 bg-white rounded-3xl p-6 shadow-sm hover:shadow-lg border border-tertiary/5 transition-all hover:-translate-y-1 group cursor-pointer relative overflow-hidden select-none">
+                            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
+                              <Leaf size={80} className="text-secondary" />
+                            </div>
+                            <div className="relative z-10 h-full flex flex-col justify-between">
+                              <div>
+                                <h3 className="font-bold text-lg text-primary truncate">
+                                  {garden.nome}
+                                </h3>
+                                <p className="text-tertiary text-sm">
+                                  {garden.plantas?.length || 0} plantas
+                                </p>
+                              </div>
+                              <div className="flex items-center text-sm text-secondary font-bold group-hover:translate-x-2 transition-transform">
+                                Abrir <ArrowRight className="ml-1 w-4 h-4" />
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden group-hover/carousel:flex -left-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-2" />
+                  <CarouselNext className="hidden group-hover/carousel:flex -right-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-2" />
+                </Carousel>
+              ) : (
+                <EmptySection
+                  icon={<Shovel size={32} />}
+                  title="Nenhum jardim criado"
+                  link="/my-gardens"
+                  linkText="Criar meu primeiro jardim"
+                />
+              )}
             </div>
-          ) : gardens.length > 0 ? (
-            <Carousel
-              opts={{ align: "start" }}
-              className="w-full relative group/carousel"
-            >
-              <CarouselContent className="-ml-4 pb-4">
-                {gardens.map((garden) => (
-                  <CarouselItem key={garden.id} className="pl-4 basis-auto">
-                    <Link href={`/my-gardens/${garden.id}`}>
-                      <div className="w-72 h-40 bg-white rounded-3xl p-6 shadow-sm hover:shadow-lg border border-tertiary/5 transition-all hover:-translate-y-1 group cursor-pointer relative overflow-hidden select-none">
-                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
-                          <Leaf size={80} className="text-secondary" />
-                        </div>
-                        <div className="relative z-10 h-full flex flex-col justify-between">
-                          <div>
-                            <h3 className="font-bold text-lg text-primary truncate">
-                              {garden.nome}
-                            </h3>
-                            <p className="text-tertiary text-sm">
-                              {garden.plantas?.length || 0} plantas
-                            </p>
-                          </div>
-                          <div className="flex items-center text-sm text-secondary font-bold group-hover:translate-x-2 transition-transform">
-                            Abrir <ArrowRight className="ml-1 w-4 h-4" />
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden group-hover/carousel:flex -left-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-2" />
-              <CarouselNext className="hidden group-hover/carousel:flex -right-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-2" />
-            </Carousel>
-          ) : (
-            <EmptySection
-              icon={<Shovel size={32} />}
-              title="Nenhum jardim criado"
-              link="/my-gardens"
-              linkText="Criar meu primeiro jardim"
-            />
-          )}
-        </div>
 
-        {/* 4. MINHAS PLANTAS (CARROSSEL) */}
-        <div className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
-          <div className="flex justify-between items-end mb-4 px-2">
-            <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
-              <Sprout className="w-6 h-6 text-secondary" />
-              Suas Plantas
-            </h2>
-            {plants.length > 0 && (
-              <Link
-                href="/my-plants"
-                className="text-sm font-medium text-tertiary hover:text-secondary flex items-center transition-colors"
-              >
-                Ver todas <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
-            )}
-          </div>
+            {/* 4. MINHAS PLANTAS (CARROSSEL) */}
+            <div className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
+              <div className="flex justify-between items-end mb-4 px-2">
+                <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
+                  <Sprout className="w-6 h-6 text-secondary" />
+                  Suas Plantas
+                </h2>
+                {plants.length > 0 && (
+                  <Link
+                    href="/my-plants"
+                    className="text-sm font-medium text-tertiary hover:text-secondary flex items-center transition-colors"
+                  >
+                    Ver todas <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                )}
+              </div>
 
-          {loadingUserData ? (
-            <div className="flex gap-4 overflow-hidden">
-              <Skeleton className="w-48 h-64 rounded-3xl flex-shrink-0" />
-              <Skeleton className="w-48 h-64 rounded-3xl flex-shrink-0" />
+              {loadingUserData ? (
+                <div className="flex gap-4 overflow-hidden">
+                  <Skeleton className="w-48 h-64 rounded-3xl flex-shrink-0" />
+                  <Skeleton className="w-48 h-64 rounded-3xl flex-shrink-0" />
+                </div>
+              ) : plants.length > 0 ? (
+                <Carousel
+                  opts={{ align: "start" }}
+                  className="w-full relative group/carousel"
+                >
+                  <CarouselContent className="-ml-4 pb-6">
+                    {plants.map((plant) => (
+                      <CarouselItem key={plant.id} className="pl-4 basis-auto">
+                        <Link href={`/my-plants/${plant.id}`}>
+                          <div className="w-48 bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-tertiary/5 transition-all hover:-translate-y-2 group cursor-pointer select-none">
+                            <div className="h-32 overflow-hidden relative bg-gray-100">
+                              <img
+                                src={
+                                  plant.catalogo?.img_url ||
+                                  "/placeholder-plant.jpg"
+                                }
+                                alt={plant.apelido}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    "https://images.unsplash.com/photo-1459156212016-c812468e2115?auto=format&fit=crop&q=80&w=300&h=300";
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                <span className="text-white text-xs font-medium">
+                                  Cuidar
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-4">
+                              <h3 className="font-bold text-primary truncate mb-1">
+                                {plant.apelido}
+                              </h3>
+                              <p className="text-xs text-tertiary italic truncate">
+                                {plant.catalogo?.nome || "Planta desconhecida"}
+                              </p>
+                            </div>
+                          </div>
+                        </Link>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden group-hover/carousel:flex -left-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-3" />
+                  <CarouselNext className="hidden group-hover/carousel:flex -right-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-3" />
+                </Carousel>
+              ) : (
+                <EmptySection
+                  icon={<Sprout size={32} />}
+                  title="Sua coleção está vazia"
+                  link="/catalog"
+                  linkText="Explorar Catálogo"
+                />
+              )}
             </div>
-          ) : plants.length > 0 ? (
-            <Carousel
-              opts={{ align: "start" }}
-              className="w-full relative group/carousel"
-            >
-              <CarouselContent className="-ml-4 pb-6">
-                {plants.map((plant) => (
-                  <CarouselItem key={plant.id} className="pl-4 basis-auto">
-                    <Link href={`/my-plants/${plant.id}`}>
-                      <div className="w-48 bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-tertiary/5 transition-all hover:-translate-y-2 group cursor-pointer select-none">
-                        <div className="h-32 overflow-hidden relative bg-gray-100">
-                          <img
-                            src={
-                              plant.catalogo?.img_url ||
-                              "/placeholder-plant.jpg"
-                            }
-                            alt={plant.apelido}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            onError={(e) => {
-                              e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1459156212016-c812468e2115?auto=format&fit=crop&q=80&w=300&h=300";
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                            <span className="text-white text-xs font-medium">
-                              Cuidar
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-bold text-primary truncate mb-1">
-                            {plant.apelido}
-                          </h3>
-                          <p className="text-xs text-tertiary italic truncate">
-                            {plant.catalogo?.nome || "Planta desconhecida"}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden group-hover/carousel:flex -left-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-3" />
-              <CarouselNext className="hidden group-hover/carousel:flex -right-4 bg-white border-none shadow-lg text-primary hover:text-secondary -mt-3" />
-            </Carousel>
-          ) : (
-            <EmptySection
-              icon={<Sprout size={32} />}
-              title="Sua coleção está vazia"
-              link="/catalog"
-              linkText="Explorar Catálogo"
-            />
-          )}
-        </div>
+          </>
+        )}
       </div>
 
-      {/* --- MODAL PERSONALIZADO --- */}
+      {/* --- MODAL PERSONALIZADO (Permanece igual) --- */}
       {selectedPlant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
