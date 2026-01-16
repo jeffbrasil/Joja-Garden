@@ -22,7 +22,7 @@ def criar_jardim(
     session = Depends(get_db),
     current_usuario = Depends(get_current_user)
 ):
-    if session.query(Jardim).filter(Jardim.nome == jardim_in.nome).first():
+    if session.query(Jardim).filter(Jardim.nome == jardim_in.nome, Jardim.usuario_id == current_usuario.id).first():
         raise HTTPException(status_code= 400, detail = "Já existe um jardim com esse nome")
 
     novo_jardim = Jardim(
